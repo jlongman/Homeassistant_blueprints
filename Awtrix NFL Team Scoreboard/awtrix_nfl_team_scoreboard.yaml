@@ -66,6 +66,17 @@ blueprint:
           unit_of_measurement: "sec"
       default: 15
 
+    message_lifetime:
+      name: Score Lifetime ⏱️
+      description: >-
+        How long should the score remain on the screen (in hours) after the game ends.
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "hours"
+      default: 1
+
     my_sensor:
       name: Team Sensor
       description: Select your Team Sensor
@@ -121,6 +132,7 @@ variables:
   appname: !input appname
   my_sensor: !input my_sensor
   message_duration: !input message_duration
+  message_lifetime: !input message_lifetime
   my_timer: !input my_timer
   my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
@@ -130,6 +142,7 @@ variables:
   team_colors_1: "{{ state_attr(my_sensor, 'team_colors')[1] }}"
   opponent_colors_0: "{{ state_attr(my_sensor, 'opponent_colors')[0] }}"
   opponent_colors_1: "{{ state_attr(my_sensor, 'opponent_colors')[1] }}"
+  pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
   team_score: >-
     {% set raw_team_score = state_attr(my_sensor, 'team_score') %}
     {% if raw_team_score|int < 10 %}
@@ -167,6 +180,19 @@ variables:
   payload_switch: >-
     {
       "name" : "{{ appname }}"
+    }
+  payload_game_prestart: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ team_colors_0 }}"]},
+        {"df":[16,0,16,8,"{{ opponent_colors_0 }}"]},
+        {"dl":[3,0,1,7,"{{ team_colors_1 }}"]},
+        {"dl":[5,0,3,7,"{{ team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]},
+        {"dt":[4, 1, "{{ pregame_notice }}",[255,255,255]]}
+      ],
+      "duration": {{ (message_duration / 2) | int }} 
     }
   payload_game_start: >-
     {
@@ -232,8 +258,16 @@ variables:
       ], 
       "duration": {{ message_duration }} 
     }
+  payload_set_lifetime": >-
+    {
+      "lifetime": "{{ (message_lifetime * 60 * 60) | int }}"
+    }
 
 triggers:
+  - trigger: state
+    entity_id: !input my_sensor
+    to: PRE
+    id: PreGame Start
   - trigger: state
     entity_id: !input my_sensor
     to: IN
@@ -272,6 +306,17 @@ action:
       for_each: "{{ devices }}"
       sequence:
         - choose:
+            - conditions:
+                - condition: trigger
+                  id:
+                    - PreGame Start
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_prestart }}"
             - conditions:
                 - condition: trigger
                   id:
@@ -508,6 +553,10 @@ action:
                   id:
                     - Game End
               sequence:
+                - service: mqtt.publish
+                  data:
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_set_lifetime }}"
                 - service: mqtt.publish
                   data:
                     qos: 0
