@@ -1,38 +1,20 @@
 blueprint:
-  name: "AWTRIX - NFL Team Scoreboard"
+  name: "AWTRIX - Sport Team Scoreboard with Intermissions"
   author: Hank_the_Tank
   description: >
-    # NFL Team Scoreboard for AWTRIX Light
-
-
-
+    # Sports Team Scoreboard for AWTRIX Light
     ## Screenshots
-
       ![](https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/screenshot.svg)  - ![](https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/screenshot2.svg)  -  ![](https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/screenshot3.svg)
 
-
-
-
-
-
-
     ## Prerequisites
-
     **Before** using this blueprint, ensure that you have **HACS** installed. You also need the ha-teamtracker integration [here](https://github.com/vasqued2/ha-teamtracker).
-
-
     ## Credits
 
     to Blueforcer for Awtrix Light
 
     If you want to support his hard work in developing awtrix light, please consider to buy your Ulanzi clock with his affiliate links
-
-
-
     [EU] [link](https://www.ulanzi.de/products/ulanzi-pixel-smart-uhr-2882?ref=28e02dxl)
-
     [US] [link](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882?ref=28e02dxl)
-
 
     If you already have hundreds of clocks, there are more ways to support him.
 
@@ -42,19 +24,14 @@ blueprint:
 
     ## Get the Awtrix Light Companion App for iOS/Android
 
-
     <a href='https://play.google.com/store/apps/details?id=de.awtrix.light&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
-    <img style="width: 20%; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/playstore_button.png'/>
+    <img style="width: 5%; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/playstore_button.png'/>
     </a>
     <a href='https://apps.apple.com/de/app/awtrix-light/id6459478110'>
-    <img style="width: 20%; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/appstore_button.png'/>
+    <img style="width: 5%; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/appstore_button.png'/>
     </a>
 
-
-
     **Special Thanks to RobG** This would not be possible without him
-
-
     **Thanks in advance**
 
   domain: automation
@@ -62,7 +39,7 @@ blueprint:
   input:
     awtrix:
       name: AWTRIX Device
-      description: Select the Awtrix 3
+      description: Select the Awtrix Light
       selector:
         device:
           integration: mqtt
@@ -74,7 +51,7 @@ blueprint:
       name: Awtrix Application name
       description: >-
         This is the app name listed in the MQTT topic - it should be unique
-      default: "nflteamscore"
+      default: "sportsteamscore"
       selector:
         text:
 
@@ -90,14 +67,44 @@ blueprint:
       default: 15
 
     my_sensor:
-      name: Football Sensor
-      description: Select your Football Team Sensor
+      name: Team Sensor
+      description: Select your Team Sensor
       selector:
         entity:
           filter:
             - integration: teamtracker
 
-  source_url: https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
+    my_timer:
+      name: Intermission Timer
+      description: Select your Sports Intermission Timer
+      selector:
+        entity:
+          filter:
+            - integration: timer
+
+    my_timer_1st_2nd_intermission:
+      name: "Regular Intermission Duration ⏱️"
+      description: >-
+        Set the timer to this duration in seconds
+      selector:
+        number:
+          min: 0
+          max: 1200
+          unit_of_measurement: "sec"
+      default: 1030
+
+    my_timer_overtime_intermission:
+      name: "Overtime Intermission Duration ⏱️"
+      description: >-
+        Set the timer to this duration in seconds, 0 to use Regular period time
+      selector:
+        number:
+          min: 0
+          max: 1200
+          unit_of_measurement: "sec"
+      default: 130
+
+  source_url: https://raw.githubusercontent.com/jlongman/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
 
 variables:
   device_ids: !input awtrix
@@ -114,6 +121,11 @@ variables:
   appname: !input appname
   my_sensor: !input my_sensor
   message_duration: !input message_duration
+  my_timer: !input my_timer
+  my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
+  my_timer_overtime_intermission: !input my_timer_overtime_intermission
+  intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
+  intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
   team_colors_0: "{{ state_attr(my_sensor, 'team_colors')[0] }}"
   team_colors_1: "{{ state_attr(my_sensor, 'team_colors')[1] }}"
   opponent_colors_0: "{{ state_attr(my_sensor, 'opponent_colors')[0] }}"
@@ -220,34 +232,41 @@ variables:
       ], 
       "duration": {{ message_duration }} 
     }
-trigger:
-  - platform: state
-    entity_id:
-      - !input my_sensor
+
+triggers:
+  - trigger: state
+    entity_id: !input my_sensor
     to: IN
     id: Game Start
-  - platform: state
-    entity_id:
-      - !input my_sensor
+  - trigger: state
+    entity_id: !input my_sensor
     to: POST
     id: Game End
-  - platform: state
-    entity_id:
-      - !input my_sensor
+  - trigger: state
+    entity_id: !input my_sensor
     attribute: team_score
     id: Team Score Change
-  - platform: state
-    entity_id:
-      - !input my_sensor
+  - trigger: state
+    entity_id: !input my_sensor
     attribute: opponent_score
     id: Opponent Score Change
-  - platform: state
-    entity_id:
-      - !input my_sensor
+  - trigger: state
+    entity_id: !input my_sensor
     attribute: quarter
     id: Quarter Change
 
-condition: []
+  - trigger: template
+    value_template: >-
+      {{ (states(my_timer) != 'unknown') and (is_state_attr( my_sensor, 'clock', 'End of 1st') or is_state_attr( my_sensor, 'clock', 'End of 2nd')) }}
+    id: 1st or 2nd Intermission Start
+  - trigger: template
+    value_template: >-
+      {{ (states(my_timer) != 'unknown') and (is_state_attr(my_sensor, 'clock', 'End of 2nd')
+      and is_state_attr(my_sensor, 'sport', 'hockey') 
+      and state_attr(my_sensor, 'team_score') == state_attr(my_sensor, 'opponent_score')) }}
+    id: Overtime Start
+
+condition: [ ]
 action:
   - repeat:
       for_each: "{{ devices }}"
@@ -457,7 +476,29 @@ action:
                     qos: 0
                     retain: false
                     topic: "{{ repeat.item }}/custom/{{ appname }}"
-                    payload: "{{ payload_fourth_quarter }}"                   
+                    payload: "{{ payload_fourth_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - 1st or 2nd Intermission Start
+              sequence:
+                - action: timer.start
+                  metadata: { }
+                  data:
+                    duration: "{{ intermission_1st_time | int}}"
+                  target:
+                    entity_id: !input my_timer
+            - conditions:
+                - condition: trigger
+                  id:
+                    - 3rd Intermission Start
+              sequence:
+                - action: timer.start
+                  metadata: { }
+                  data:
+                    duration: "{{ intermission_3rd_time | int}}"
+                  target:
+                    entity_id: !input my_timer
   - repeat:
       for_each: "{{ devices }}"
       sequence:
