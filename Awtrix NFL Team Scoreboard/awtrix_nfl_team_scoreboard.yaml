@@ -1,5 +1,5 @@
 blueprint:
-  name: "AWTRIX - NFL Team Scoreboard"
+  name: "AWTRIX - Sport Team Scoreboard with Intermissions"
   author: Hank_the_Tank
   description: >
     # NFL Team Scoreboard for AWTRIX Light
@@ -90,14 +90,44 @@ blueprint:
       default: 15
 
     my_sensor:
-      name: Football Sensor
-      description: Select your Football Team Sensor
+      name: Team Sensor
+      description: Select your Team Sensor
       selector:
         entity:
           filter:
             - integration: teamtracker
 
-  source_url: https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
+    my_timer:
+      name: Intermission Timer
+      description: Select your Sports Intermission Timer
+      selector:
+        entity:
+          filter:
+            - integration: timer
+
+    my_timer_1st_2nd_intermission:
+      name: "Regular Intermission Duration ⏱️"
+      description: >-
+        Set the timer to this duration in seconds
+      selector:
+        number:
+          min: 0
+          max: 1200
+          unit_of_measurement: "sec"
+      default: 1030
+
+    my_timer_overtime_intermission:
+      name: "Overtime Intermission Duration ⏱️"
+      description: >-
+        Set the timer to this duration in seconds, 0 to use Regular period time
+      selector:
+        number:
+          min: 0
+          max: 1200
+          unit_of_measurement: "sec"
+      default: 130
+
+  source_url: https://raw.githubusercontent.com/jlongman/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
 
 variables:
   device_ids: !input awtrix
@@ -114,6 +144,11 @@ variables:
   appname: !input appname
   my_sensor: !input my_sensor
   message_duration: !input message_duration
+  my_timer: !input my_timer
+  my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
+  my_timer_overtime_intermission: !input my_timer_overtime_intermission
+  intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
+  intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
   team_colors_0: "{{ state_attr(my_sensor, 'team_colors')[0] }}"
   team_colors_1: "{{ state_attr(my_sensor, 'team_colors')[1] }}"
   opponent_colors_0: "{{ state_attr(my_sensor, 'opponent_colors')[0] }}"
@@ -247,7 +282,18 @@ trigger:
     attribute: quarter
     id: Quarter Change
 
-condition: []
+  - platform: template
+    value_template: >-
+      {{ (states(my_timer) != 'unknown') and (is_state_attr( my_sensor, 'clock', 'End of 1st') or is_state_attr( my_sensor, 'clock', 'End of 2nd')) }}
+    id: 1st or 2nd Intermission Start
+  - platform: template
+    value_template: >-
+      {{ (states(my_timer) != 'unknown') and (is_state_attr(my_sensor, 'clock', 'End of 2nd')
+      and is_state_attr(my_sensor, 'sport', 'hockey') 
+      and state_attr(my_sensor, 'team_score') == state_attr(my_sensor, 'opponent_score')) }}
+    id: Overtime Start
+
+condition: [ ]
 action:
   - repeat:
       for_each: "{{ devices }}"
@@ -457,7 +503,29 @@ action:
                     qos: 0
                     retain: false
                     topic: "{{ repeat.item }}/custom/{{ appname }}"
-                    payload: "{{ payload_fourth_quarter }}"                   
+                    payload: "{{ payload_fourth_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - 1st or 2nd Intermission Start
+              sequence:
+                - action: timer.start
+                  metadata: { }
+                  data:
+                    duration: "{{ intermission_1st_time | int}}"
+                  target:
+                    entity_id: !input my_timer
+            - conditions:
+                - condition: trigger
+                  id:
+                    - 3rd Intermission Start
+              sequence:
+                - action: timer.start
+                  metadata: { }
+                  data:
+                    duration: "{{ intermission_3rd_time | int}}"
+                  target:
+                    entity_id: !input my_timer
   - repeat:
       for_each: "{{ devices }}"
       sequence:
