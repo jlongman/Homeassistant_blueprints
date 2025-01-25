@@ -131,9 +131,9 @@ variables:
     {{ ns.devices | reject('match','unavailable|unknown') | list }}
   appname: !input appname
   my_sensor: !input my_sensor
+  my_timer: !input my_timer
   message_duration: !input message_duration
   message_lifetime: !input message_lifetime
-  my_timer: !input my_timer
   my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
@@ -143,6 +143,7 @@ variables:
   opponent_colors_0: "{{ state_attr(my_sensor, 'opponent_colors')[0] }}"
   opponent_colors_1: "{{ state_attr(my_sensor, 'opponent_colors')[1] }}"
   pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
+  game_clock: "{{ state_attr(my_sensor, 'clock') }}"
   team_score: >-
     {% set raw_team_score = state_attr(my_sensor, 'team_score') %}
     {% if raw_team_score|int < 10 %}
@@ -189,9 +190,11 @@ variables:
         {"dl":[3,0,1,7,"{{ team_colors_1 }}"]},
         {"dl":[5,0,3,7,"{{ team_colors_1 }}"]},
         {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]},
-        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]},
-        {"dt":[4, 1, "{{ pregame_notice }}",[255,255,255]]}
+        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}
       ],
+      "text": "{{- game_clock -}}{{" - "}}{{- pregame_notice -}}",
+      "topText": "true",
+      "textCase": 2,
       "duration": {{ (message_duration / 2) | int }} 
     }
   payload_game_start: >-
@@ -258,16 +261,23 @@ variables:
       ], 
       "duration": {{ message_duration }} 
     }
-  payload_set_lifetime": >-
+  payload_set_lifetime: >-
     {
-      "lifetime": "{{ (message_lifetime * 60 * 60) | int }}"
+      "lifetime": {{ ((message_lifetime|int) * 60 * 60) | int }}
     }
 
+trigger_variables:
+  my_sensor: !input my_sensor
+  my_timer: !input my_timer
 triggers:
   - trigger: state
     entity_id: !input my_sensor
     to: PRE
     id: PreGame Start
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: kickoff_in
+    id: PreGame Notice
   - trigger: state
     entity_id: !input my_sensor
     to: IN
@@ -307,9 +317,19 @@ action:
       sequence:
         - choose:
             - conditions:
-                - condition: trigger
-                  id:
-                    - PreGame Start
+                condition: or
+                conditions:
+                  - condition: trigger
+                    id:
+                      - PreGame Start
+                  - condition: and
+                    conditions:
+                      - condition: trigger
+                        id:
+                          - PreGame Notice
+                      - condition: state
+                        entity_id: !input my_sensor
+                        state: "PRE"
               sequence:
                 - service: mqtt.publish
                   data:
@@ -317,6 +337,13 @@ action:
                     retain: false
                     topic: "{{ repeat.item }}/custom/{{ appname }}"
                     payload: "{{ payload_game_prestart }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+
             - conditions:
                 - condition: trigger
                   id:
@@ -555,6 +582,8 @@ action:
               sequence:
                 - service: mqtt.publish
                   data:
+                    qos: 0
+                    retain: false
                     topic: "{{ repeat.item }}/custom/{{ appname }}"
                     payload: "{{ payload_set_lifetime }}"
                 - service: mqtt.publish
