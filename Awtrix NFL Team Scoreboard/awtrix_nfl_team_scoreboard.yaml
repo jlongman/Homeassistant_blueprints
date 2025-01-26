@@ -568,7 +568,7 @@ action:
             - conditions:
                 - condition: trigger
                   id:
-                    - 3rd Intermission Start
+                    - Overtime Start
               sequence:
                 - action: timer.start
                   metadata: { }
