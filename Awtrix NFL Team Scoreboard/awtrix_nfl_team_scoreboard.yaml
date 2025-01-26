@@ -305,7 +305,7 @@ triggers:
     id: 1st or 2nd Intermission Start
   - trigger: template
     value_template: >-
-      {{ (states(my_timer) != 'unknown') and (is_state_attr(my_sensor, 'clock', 'End of 2nd')
+      {{ (states(my_timer) != 'unknown') and (is_state_attr(my_sensor, 'clock', 'End of 3rd')
       and is_state_attr(my_sensor, 'sport', 'hockey') 
       and state_attr(my_sensor, 'team_score') == state_attr(my_sensor, 'opponent_score')) }}
     id: Overtime Start
