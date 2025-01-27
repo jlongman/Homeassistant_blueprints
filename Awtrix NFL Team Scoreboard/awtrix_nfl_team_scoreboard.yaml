@@ -3,11 +3,14 @@ blueprint:
   author: Hank_the_Tank
   description: >
     # Sports Team Scoreboard for AWTRIX Light
+    
     ## Screenshots
       ![](https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/screenshot.svg)  - ![](https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/screenshot2.svg)  -  ![](https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/screenshot3.svg)
 
     ## Prerequisites
+    
     **Before** using this blueprint, ensure that you have **HACS** installed. You also need the ha-teamtracker integration [here](https://github.com/vasqued2/ha-teamtracker).
+    
     ## Credits
 
     to Blueforcer for Awtrix Light
@@ -25,10 +28,10 @@ blueprint:
     ## Get the Awtrix Light Companion App for iOS/Android
 
     <a href='https://play.google.com/store/apps/details?id=de.awtrix.light&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
-    <img style="width: 5%; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/playstore_button.png'/>
+    <img style="width: 100px; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/playstore_button.png'/>
     </a>
     <a href='https://apps.apple.com/de/app/awtrix-light/id6459478110'>
-    <img style="width: 5%; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/appstore_button.png'/>
+    <img style="width: 100px; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/appstore_button.png'/>
     </a>
 
     **Special Thanks to RobG** This would not be possible without him
@@ -134,6 +137,8 @@ variables:
   my_timer: !input my_timer
   message_duration: !input message_duration
   message_lifetime: !input message_lifetime
+  date_stripper: "{{ [ now().month, '/', now().day] | join('') }}"
+  timezone_regex: " ?[A-Z][SD]T"
   my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
@@ -191,8 +196,8 @@ variables:
         {"dl":[5,0,3,7,"{{ team_colors_1 }}"]},
         {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]},
         {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}
-      ],
-      "text": "{{- game_clock -}}{{" - "}}{{- pregame_notice -}}",
+      ],:
+      "text": "{{- game_clock | replace( date_stripper | join, '') | replace(' - ','') | regex_replace(timezone_regex, '') -}}{{' - '}}{{- pregame_notice -}}",
       "topText": "true",
       "textCase": 2,
       "duration": {{ (message_duration / 2) | int }} 
@@ -563,7 +568,7 @@ action:
             - conditions:
                 - condition: trigger
                   id:
-                    - 3rd Intermission Start
+                    - Overtime Start
               sequence:
                 - action: timer.start
                   metadata: { }
