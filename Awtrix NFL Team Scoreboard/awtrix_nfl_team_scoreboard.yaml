@@ -137,7 +137,7 @@ variables:
   my_timer: !input my_timer
   message_duration: !input message_duration
   message_lifetime: !input message_lifetime
-  date_stripper: "{{ [ now().month, '/', now().day] | join('') }}"
+  date_stripper: "{{ [ now().month, '/', now().day, ' - '] | join('') }}"
   timezone_regex: " ?[A-Z][SD]T"
   my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
@@ -196,8 +196,8 @@ variables:
         {"dl":[5,0,3,7,"{{ team_colors_1 }}"]},
         {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]},
         {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}
-      ],:
-      "text": "{{- game_clock | replace( date_stripper | join, '') | replace(' - ','') | regex_replace(timezone_regex, '') -}}{{' - '}}{{- pregame_notice -}}",
+      ],
+      "text": " {{ game_clock | replace( date_stripper | join, '') | regex_replace(timezone_regex, '') }}{{' - '}}{{- pregame_notice -}}",
       "topText": "true",
       "textCase": 2,
       "duration": {{ (message_duration / 2) | int }} 
@@ -556,22 +556,18 @@ action:
                     payload: "{{ payload_fourth_quarter }}"
             - conditions:
                 - condition: trigger
-                  id:
-                    - 1st or 2nd Intermission Start
+                  id: 1st or 2nd Intermission Start
               sequence:
                 - action: timer.start
-                  metadata: { }
                   data:
                     duration: "{{ intermission_1st_time | int}}"
                   target:
                     entity_id: !input my_timer
             - conditions:
                 - condition: trigger
-                  id:
-                    - Overtime Start
+                  id: Overtime Start
               sequence:
                 - action: timer.start
-                  metadata: { }
                   data:
                     duration: "{{ intermission_3rd_time | int}}"
                   target:
