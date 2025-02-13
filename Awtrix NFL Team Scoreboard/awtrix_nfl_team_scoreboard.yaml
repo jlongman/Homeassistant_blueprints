@@ -143,10 +143,34 @@ variables:
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
   intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
-  team_colors_0: "{{ state_attr(my_sensor, 'team_colors')[0] }}"
-  team_colors_1: "{{ state_attr(my_sensor, 'team_colors')[1] }}"
-  opponent_colors_0: "{{ state_attr(my_sensor, 'opponent_colors')[0] }}"
-  opponent_colors_1: "{{ state_attr(my_sensor, 'opponent_colors')[1] }}"
+  team_colors_0: >-
+    {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
+    {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
+    {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
+    {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
+    {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+    {% endif %}
+  team_colors_1: >-
+    {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
+    {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
+    {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
+    {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
+    {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+    {% endif %}
+  opponent_colors_0: >-
+    {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
+    {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+    {% endif %}
+  opponent_colors_1: >-
+    {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
+    {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+    {% endif %}
   pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
   game_clock: "{{ state_attr(my_sensor, 'clock') }}"
   team_score: >-
