@@ -118,6 +118,21 @@ blueprint:
           unit_of_measurement: "sec"
       default: 130
 
+    display_mode:
+      name: Display Mode
+      description: >-
+        Choose how teams are displayed: 
+        'ESPN default' - Selected Team is on the left, Other Team is on the right  
+        'Traditional' - Away Team At Home Team
+      default: "my_team_left"
+      selector:
+        select:
+          options:
+            - label: "ESPN default"
+              value: "my_team_left"
+            - label: "Traditional"
+              value: "home_team_right"
+
   source_url: https://raw.githubusercontent.com/jlongman/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
 
 variables:
@@ -143,6 +158,93 @@ variables:
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
   intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
+  is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
+  left_team_colors_0: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+      {% endif %}
+    {% endif %}
+  left_team_colors_1: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+      {% endif %}
+    {% endif %}
+  right_team_colors_0: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+      {% endif %}
+    {% endif %}
+  right_team_colors_1: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+      {% endif %}
+    {% endif %}
+  left_team_score: >-
+    {% if is_swapped %}
+      {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
+    {% else %}
+      {% set raw_score = state_attr(my_sensor, 'team_score') %}
+    {% endif %}
+    {% if raw_score|int < 10 %}
+      {{ "0" + raw_score|string }}
+    {% else %}
+      {{ raw_score|string }}
+    {% endif %}
+  right_team_score: >-
+    {% if is_swapped %}
+      {% set raw_score = state_attr(my_sensor, 'team_score') %}
+    {% else %}
+      {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
+    {% endif %}
+    {% if raw_score|int < 10 %}
+      {{ "0" + raw_score|string }}
+    {% else %}
+      {{ raw_score|string }}
+    {% endif %}
   team_colors_0: >-
     {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
     {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
@@ -214,12 +316,12 @@ variables:
   payload_game_prestart: >-
     {
       "draw":[ 
-        {"df":[0,0,16,8,"{{ team_colors_0 }}"]},
-        {"df":[16,0,16,8,"{{ opponent_colors_0 }}"]},
-        {"dl":[3,0,1,7,"{{ team_colors_1 }}"]},
-        {"dl":[5,0,3,7,"{{ team_colors_1 }}"]},
-        {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]},
-        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+        {"dl":[3,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[5,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}
       ],
       "text": " {{ game_clock | replace( date_stripper | join, '') | regex_replace(timezone_regex, '') }}{{' - '}}{{- pregame_notice -}}",
       "topText": "true",
@@ -229,15 +331,15 @@ variables:
   payload_game_start: >-
     {
       "draw":[ 
-        {"df":[0,0,16,8,"{{ team_colors_0 }}"]},     
-        {"df":[16,0,16,8,"{{ opponent_colors_0 }}"]}, 
-        {"dl":[1,0,1,7,"{{ team_colors_1 }}"]},
-        {"dl":[3,0,3,7,"{{ team_colors_1 }}"]},
-        {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]}, 
-        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}, 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ first_quarter }}
-        {"dt":[7, 1, "{{ team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ opponent_score }}",[255,255,255]]}, 
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -245,15 +347,15 @@ variables:
   payload_second_quarter: >-
     {
       "draw":[ 
-        {"df":[0,0,16,8,"{{ team_colors_0 }}"]},     
-        {"df":[16,0,16,8,"{{ opponent_colors_0 }}"]}, 
-        {"dl":[1,0,1,7,"{{ team_colors_1 }}"]},
-        {"dl":[3,0,3,7,"{{ team_colors_1 }}"]},
-        {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]}, 
-        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}, 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ second_quarter }}
-        {"dt":[7, 1, "{{ team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ opponent_score }}",[255,255,255]]}, 
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -261,15 +363,15 @@ variables:
   payload_third_quarter: >-
     {
       "draw":[ 
-        {"df":[0,0,16,8,"{{ team_colors_0 }}"]},     
-        {"df":[16,0,16,8,"{{ opponent_colors_0 }}"]}, 
-        {"dl":[1,0,1,7,"{{ team_colors_1 }}"]},
-        {"dl":[3,0,3,7,"{{ team_colors_1 }}"]},
-        {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]}, 
-        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}, 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ third_quarter }}
-        {"dt":[7, 1, "{{ team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ opponent_score }}",[255,255,255]]}, 
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -277,15 +379,15 @@ variables:
   payload_fourth_quarter: >-
     {
       "draw":[ 
-        {"df":[0,0,16,8,"{{ team_colors_0 }}"]},     
-        {"df":[16,0,16,8,"{{ opponent_colors_0 }}"]}, 
-        {"dl":[1,0,1,7,"{{ team_colors_1 }}"]},
-        {"dl":[3,0,3,7,"{{ team_colors_1 }}"]},
-        {"dl":[28,0,28,7,"{{ opponent_colors_1 }}"]}, 
-        {"dl":[30,0,30,7,"{{ opponent_colors_1 }}"]}, 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ fourth_quarter }}
-        {"dt":[7, 1, "{{ team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ opponent_score }}",[255,255,255]]}, 
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
