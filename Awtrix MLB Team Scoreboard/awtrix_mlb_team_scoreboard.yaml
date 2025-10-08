@@ -284,6 +284,56 @@ variables:
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
   opponent_score: >-
     {{ state_attr(my_sensor, 'opponent_score') | default(0) | int }}
+
+  # --- MLB Phase 6: Payloads ---
+  # Active at-bat payload (background split 2/3 vs 1/3, scores, bases, outs)
+  payload_mlb_active: >-
+    {
+      "draw":[
+        {% if is_top_inning %}
+          {"df":[0,0,22,8,"{{ left_team_colors_0 }}"]},
+          {"df":[22,0,10,8,"{{ right_team_colors_0 }}"]},
+          {"dp":[21,0,"#000000"]},
+        {% elif is_bottom_inning %}
+          {"df":[0,0,11,8,"{{ left_team_colors_0 }}"]},
+          {"df":[11,0,21,8,"{{ right_team_colors_0 }}"]},
+          {"dp":[10,0,"#000000"]},
+        {% else %}
+          {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+          {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+        {% endif %}
+
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[5,0,5,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]},
+
+        {"dt":[4,1,"{{ left_team_score }}",[255,255,255]]},
+        {"dt":[26,1,"{{ right_team_score }}",[255,255,255]]}
+        {% if bases_display|trim %},{{ bases_display }}{% endif %}
+        {% if outs_display|trim %},{{ outs_display }}{% endif %}
+      ],
+      "duration": {{ message_duration }}
+    }
+
+  # Between-innings payload (50/50 background, scores, inning number/pip only)
+  payload_mlb_between: >-
+    {
+      "draw":[
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[5,0,5,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]},
+
+        {"dt":[4,1,"{{ left_team_score }}",[255,255,255]]},
+        {"dt":[26,1,"{{ right_team_score }}",[255,255,255]]}
+        {% if inning_display|trim %},{{ inning_display }}{% endif %}
+      ],
+      "duration": {{ message_duration }}
+    }
+
   first_quarter: >-
     {"dp":[12,7,"#ffffff"]},
     {"dp":[14,7,"#5F5F5F"]},
