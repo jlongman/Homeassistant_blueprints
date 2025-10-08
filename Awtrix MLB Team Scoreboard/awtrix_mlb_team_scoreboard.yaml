@@ -549,6 +549,34 @@ action:
             - conditions:
                 - condition: trigger
                   id:
+                    - MLB Clock Change
+                    - Team Score Change
+                    - Opponent Score Change
+                    - MLB Outs Change
+                    - MLB First Base Change
+                    - MLB Second Base Change
+                    - MLB Third Base Change
+                    - Quarter Change
+                - condition: state
+                  entity_id: !input my_sensor
+                  state: "IN"
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: >-
+                      {{ payload_mlb_between if is_middle_inning else payload_mlb_active }}
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
                     - Quarter Change
                 - condition: numeric_state
                   entity_id: !input my_sensor
