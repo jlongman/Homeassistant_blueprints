@@ -267,6 +267,19 @@ variables:
       {"dp":[19,5,{{ '"%s"' % (on if o >= 3 else off) }}]}
     {% endif %}
 
+  # --- MLB Phase 5: Between-innings inning number (centered with top/bottom pip) ---
+  inning_display: >-
+    {% if is_middle_inning %}
+      {% set inn = mlb_inning | int %}
+      {% set x = 13 if inn >= 10 else 14 %}
+      {"dt":[{{ x }},2,"{{ inn }}",[255,255,255]]},
+      {% if is_top_inning %}
+        {"dp":[15,1,"#FFFFFF"]}
+      {% elif is_bottom_inning %}
+        {"dp":[15,4,"#FFFFFF"]}
+      {% endif %}
+    {% endif %}
+
   team_score: >-
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
   opponent_score: >-
