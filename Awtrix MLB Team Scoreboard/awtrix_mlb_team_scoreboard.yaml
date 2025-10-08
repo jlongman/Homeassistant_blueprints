@@ -240,6 +240,21 @@ variables:
     {% endif %}
   pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
   game_clock: "{{ state_attr(my_sensor, 'clock') }}"
+#     --- MLB Foundation (Phase 1) ---
+#     Raw MLB attributes with safe defaults
+  mlb_outs: "{{ state_attr(my_sensor, 'outs') | default(0) | int }}"
+  mlb_on_first: "{{ state_attr(my_sensor, 'on_first') | default(false) | bool }}"
+  mlb_on_second: "{{ state_attr(my_sensor, 'on_second') | default(false) | bool }}"
+  mlb_on_third: "{{ state_attr(my_sensor, 'on_third') | default(false) | bool }}"
+  # TeamTracker uses 'quarter' for inning number in MLB
+  mlb_inning: "{{ state_attr(my_sensor, 'quarter') | default(0) | int }}"
+  mlb_clock: "{{ state_attr(my_sensor, 'clock') | default('') }}"
+
+  # Inning state helpers (case-insensitive)
+  is_top_inning: "{{ mlb_clock | lower | regex_search('^top') }}"
+  is_bottom_inning: "{{ mlb_clock | lower | regex_search('^bottom') }}"
+  is_middle_inning: "{{ (mlb_clock | lower | regex_search('^middle')) or (mlb_clock | lower | regex_search('^end')) }}"
+
   team_score: >-
     {% set raw_team_score = state_attr(my_sensor, 'team_score') %}
     {% if raw_team_score|int < 10 %}
