@@ -280,6 +280,28 @@ variables:
       {% endif %}
     {% endif %}
 
+  # --- MLB Phase 9: Inning line (bottom row, visitor/home pips) ---
+  inning_line: >-
+    {% set cur = mlb_inning | int %}
+    {% set cur_idx = 10 if cur > 10 else cur %}
+    {% set start_x = 2 if cur >= 10 else 3 %}
+    {% set vcolor = right_team_colors_0 if is_swapped else left_team_colors_0 %}
+    {% set hcolor = left_team_colors_0 if is_swapped else right_team_colors_0 %}
+    {% set draws = [] %}
+    {% set total = 10 if cur >= 10 else 9 %}
+    {% for i in range(1, total + 1) %}
+      {% set vx = start_x + (i - 1) * 3 %}
+      {% set hx = vx + 1 %}
+      {% if i == cur_idx and cur_idx > 0 %}
+        {% set _ = draws.append('{"dp":[' ~ vx ~ ',7,"#FFFFFF"]}') %}
+        {% set _ = draws.append('{"dp":[' ~ hx ~ ',7,"#FFFFFF"]}') %}
+      {% else %}
+        {% set _ = draws.append('{"dp":[' ~ vx ~ ',7,"' ~ vcolor ~ '"]}') %}
+        {% set _ = draws.append('{"dp":[' ~ hx ~ ',7,"' ~ hcolor ~ '"]}') %}
+      {% endif %}
+    {% endfor %}
+    {{ draws | join(',') }}
+
   team_score: >-
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
   opponent_score: >-
@@ -312,6 +334,7 @@ variables:
         {"dt":[26,1,"{{ right_team_score }}",[255,255,255]]}
         {% if bases_display|trim %},{{ bases_display }}{% endif %}
         {% if outs_display|trim %},{{ outs_display }}{% endif %}
+        ,{{ inning_line }}
       ],
       "duration": {{ message_duration }}
     }
@@ -330,6 +353,7 @@ variables:
         {"dt":[4,1,"{{ left_team_score }}",[255,255,255]]},
         {"dt":[26,1,"{{ right_team_score }}",[255,255,255]]}
         {% if inning_display|trim %},{{ inning_display }}{% endif %}
+        ,{{ inning_line }}
       ],
       "duration": {{ message_duration }}
     }
