@@ -232,18 +232,18 @@ variables:
   game_clock: "{{ state_attr(my_sensor, 'clock') }}"
 #     --- MLB Foundation (Phase 1) ---
 #     Raw MLB attributes with safe defaults
-  mlb_outs: "{{ state_attr(my_sensor, 'outs') | default(0) | int }}"
+  mlb_outs: "{{ state_attr(my_sensor, 'outs') | int(0) }}"
   mlb_on_first: "{{ state_attr(my_sensor, 'on_first') | default(false) | bool }}"
   mlb_on_second: "{{ state_attr(my_sensor, 'on_second') | default(false) | bool }}"
   mlb_on_third: "{{ state_attr(my_sensor, 'on_third') | default(false) | bool }}"
   # TeamTracker uses 'quarter' for inning number in MLB
-  mlb_inning: "{{ state_attr(my_sensor, 'quarter') | default(0) | int }}"
-  mlb_clock: "{{ state_attr(my_sensor, 'clock') | default('') }}"
+  mlb_inning: "{{ state_attr(my_sensor, 'quarter') | int(0) }}"
+  mlb_clock: "{{ state_attr(my_sensor, 'clock') | default('') | string }}"
 
   # Inning state helpers (case-insensitive)
-  is_top_inning: "{{ mlb_clock | lower | regex_search('^top') }}"
-  is_bottom_inning: "{{ mlb_clock | lower | regex_search('^bottom') }}"
-  is_middle_inning: "{{ (mlb_clock | lower | regex_search('^middle')) or (mlb_clock | lower | regex_search('^end')) }}"
+  is_top_inning: "{{ (mlb_clock | string | lower) is match('^top') }}"
+  is_bottom_inning: "{{ (mlb_clock | string | lower) is match('^bottom') }}"
+  is_middle_inning: "{{ (mlb_clock | string | lower) is match('^middle') or (mlb_clock | string | lower) is match('^end') }}"
 
   team_score: >-
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
