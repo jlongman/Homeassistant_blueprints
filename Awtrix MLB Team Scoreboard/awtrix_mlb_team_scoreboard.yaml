@@ -256,6 +256,17 @@ variables:
       {{ '{"dp":[11,2,"#FFFFFF"]}' if on3 else '{"dp":[11,2,"#5F5F5F"]}' }}
     {% endif %}
 
+  # --- MLB Phase 4: Outs display (three pips during active at-bat) ---
+  outs_display: >-
+    {% if not is_middle_inning %}
+      {% set o = mlb_outs | int %}
+      {% set on = '#FFFFFF' %}
+      {% set off = '#5F5F5F' %}
+      {"dp":[13,5,{{ '"%s"' % (on if o >= 1 else off) }}]},
+      {"dp":[16,5,{{ '"%s"' % (on if o >= 2 else off) }}]},
+      {"dp":[19,5,{{ '"%s"' % (on if o >= 3 else off) }}]}
+    {% endif %}
+
   team_score: >-
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
   opponent_score: >-
