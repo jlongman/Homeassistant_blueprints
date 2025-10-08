@@ -473,6 +473,26 @@ triggers:
     entity_id: !input my_sensor
     attribute: quarter
     id: Quarter Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: clock
+    id: MLB Clock Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: outs
+    id: MLB Outs Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: on_first
+    id: MLB First Base Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: on_second
+    id: MLB Second Base Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: on_third
+    id: MLB Third Base Change
 
 
 condition: [ ]
