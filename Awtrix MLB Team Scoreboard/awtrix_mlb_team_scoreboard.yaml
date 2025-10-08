@@ -245,6 +245,17 @@ variables:
   is_bottom_inning: "{{ (mlb_clock | string | lower) is match('^bottom') }}"
   is_middle_inning: "{{ (mlb_clock | string | lower) is match('^middle') or (mlb_clock | string | lower) is match('^end') }}"
 
+  # --- MLB Phase 3: Bases display (diamond in middle section during active at-bat) ---
+  bases_display: >-
+    {% if not is_middle_inning %}
+      {% set on1 = mlb_on_first %}
+      {% set on2 = mlb_on_second %}
+      {% set on3 = mlb_on_third %}
+      {{ '{"dp":[14,1,"#FFFFFF"]},' if on2 else '{"dp":[14,1,"#5F5F5F"]},' }}
+      {{ '{"dp":[17,2,"#FFFFFF"]},' if on1 else '{"dp":[17,2,"#5F5F5F"]},' }}
+      {{ '{"dp":[11,2,"#FFFFFF"]}' if on3 else '{"dp":[11,2,"#5F5F5F"]}' }}
+    {% endif %}
+
   team_score: >-
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
   opponent_score: >-
