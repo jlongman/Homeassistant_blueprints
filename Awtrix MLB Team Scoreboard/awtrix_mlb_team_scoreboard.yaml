@@ -1,0 +1,657 @@
+blueprint:
+  name: "AWTRIX - MLB Team Scoreboard"
+  author: Hank_the_Tank
+  description: >
+    # MLB Team Scoreboard for AWTRIX Light
+    
+    ## Screenshots
+  
+
+    ## Prerequisites
+    
+    **Before** using this blueprint, ensure that you have **HACS** installed. You also need the ha-teamtracker integration [here](https://github.com/vasqued2/ha-teamtracker).
+    
+    ## Credits
+
+    to Blueforcer for Awtrix Light
+
+    If you want to support his hard work in developing awtrix light, please consider to buy your Ulanzi clock with his affiliate links
+    [EU] [link](https://www.ulanzi.de/products/ulanzi-pixel-smart-uhr-2882?ref=28e02dxl)
+    [US] [link](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882?ref=28e02dxl)
+
+    If you already have hundreds of clocks, there are more ways to support him.
+
+    [Github](https://github.com/Blueforcer/awtrix-light#support)
+
+    wanna join the [Darkside](https://discord.gg/a3n8spsn)?
+
+    ## Get the Awtrix Light Companion App for iOS/Android
+
+    <a href='https://play.google.com/store/apps/details?id=de.awtrix.light&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
+    <img style="width: 100px; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/playstore_button.png'/>
+    </a>
+    <a href='https://apps.apple.com/de/app/awtrix-light/id6459478110'>
+    <img style="width: 100px; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/appstore_button.png'/>
+    </a>
+
+    **Special Thanks to RobG** This would not be possible without him
+    **Thanks in advance**
+
+  domain: automation
+
+  input:
+    awtrix:
+      name: AWTRIX Device
+      description: Select the Awtrix Light
+      selector:
+        device:
+          integration: mqtt
+          manufacturer: Blueforcer
+          model: AWTRIX 3
+          multiple: true
+
+    appname:
+      name: Awtrix Application name
+      description: >-
+        This is the app name listed in the MQTT topic - it should be unique
+      default: "sportsteamscore"
+      selector:
+        text:
+
+    message_duration:
+      name: Message Duration ⏱️
+      description: >-
+        How long should the message remain on the screen (in seconds).
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "sec"
+      default: 15
+
+    message_lifetime:
+      name: Score Lifetime ⏱️
+      description: >-
+        How long should the score remain on the screen (in hours) after the game ends.
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "hours"
+      default: 1
+
+    my_sensor:
+      name: Team Sensor
+      description: Select your Team Sensor
+      selector:
+        entity:
+          filter:
+            - integration: teamtracker
+
+    display_mode:
+      name: Display Mode
+      description: >-
+        Choose how teams are displayed: 
+        'ESPN default' - Selected Team is on the left, Other Team is on the right  
+        'Traditional' - Away Team At Home Team
+      default: "my_team_left"
+      selector:
+        select:
+          options:
+            - label: "ESPN default"
+              value: "my_team_left"
+            - label: "Traditional"
+              value: "home_team_right"
+
+  source_url: https://raw.githubusercontent.com/jlongman/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
+
+variables:
+  device_ids: !input awtrix
+  devices: >-
+    {% macro get_device(device_id) %}
+      {{ states((device_entities(device_id) | select('search','device_topic') | list)[0] | default('unknown')) }}
+    {% endmacro %}
+    {% set ns = namespace(devices=[]) %}
+    {% for device_id in device_ids %}
+      {% set device=get_device(device_id)|replace(' ','')|replace('\n','') %}
+      {% set ns.devices = ns.devices + [ device ] %}
+    {% endfor %}
+    {{ ns.devices | reject('match','unavailable|unknown') | list }}
+  appname: !input appname
+  my_sensor: !input my_sensor
+  message_duration: !input message_duration
+  message_lifetime: !input message_lifetime
+  date_stripper: "{{ [ now().month, '/', now().day, ' - '] | join('') }}"
+  timezone_regex: " ?[A-Z][SD]T"
+  is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
+  left_team_colors_0: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+      {% endif %}
+    {% endif %}
+  left_team_colors_1: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+      {% endif %}
+    {% endif %}
+  right_team_colors_0: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+      {% endif %}
+    {% endif %}
+  right_team_colors_1: >-
+    {% if is_swapped %}
+      {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+      {% endif %}
+    {% else %}
+      {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
+      {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
+      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+      {% endif %}
+    {% endif %}
+  left_team_score: >-
+    {% if is_swapped %}
+      {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
+    {% else %}
+      {% set raw_score = state_attr(my_sensor, 'team_score') %}
+    {% endif %}
+    {% if raw_score|int < 10 %}
+      {{ "0" + raw_score|string }}
+    {% else %}
+      {{ raw_score|string }}
+    {% endif %}
+  right_team_score: >-
+    {% if is_swapped %}
+      {% set raw_score = state_attr(my_sensor, 'team_score') %}
+    {% else %}
+      {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
+    {% endif %}
+    {% if raw_score|int < 10 %}
+      {{ "0" + raw_score|string }}
+    {% else %}
+      {{ raw_score|string }}
+    {% endif %}
+  team_colors_0: >-
+    {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
+    {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
+    {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
+    {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
+    {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+    {% endif %}
+  team_colors_1: >-
+    {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
+    {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
+    {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
+    {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
+    {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+    {% endif %}
+  opponent_colors_0: >-
+    {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
+    {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+    {% endif %}
+  opponent_colors_1: >-
+    {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
+    {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
+    {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+    {% endif %}
+  pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
+  game_clock: "{{ state_attr(my_sensor, 'clock') }}"
+  team_score: >-
+    {% set raw_team_score = state_attr(my_sensor, 'team_score') %}
+    {% if raw_team_score|int < 10 %}
+      {{  "0" + raw_team_score|string }}
+    {% else %}
+        {{ raw_team_score|string }}
+    {% endif %}
+  opponent_score: >-
+    {% set raw_opponent_score = state_attr(my_sensor, 'opponent_score') %}
+    {% if raw_opponent_score|int < 10 %}
+        {{ "0" + raw_opponent_score|string }}
+    {% else %}
+        {{ raw_opponent_score|string }}
+    {% endif %}
+  first_quarter: >-
+    {"dp":[12,7,"#ffffff"]},
+    {"dp":[14,7,"#5F5F5F"]},
+    {"dp":[17,7,"#5F5F5F"]},
+    {"dp":[19,7,"#5F5F5F"]},
+  second_quarter: >-
+    {"dp":[12,7,"#ffffff"]},
+    {"dp":[14,7,"#ffffff"]},
+    {"dp":[17,7,"#5F5F5F"]},
+    {"dp":[19,7,"#5F5F5F"]},
+  third_quarter: >-
+    {"dp":[12,7,"#ffffff"]},
+    {"dp":[14,7,"#ffffff"]},
+    {"dp":[17,7,"#ffffff"]},
+    {"dp":[19,7,"#5F5F5F"]},
+  fourth_quarter: >-
+    {"dp":[12,7,"#ffffff"]},
+    {"dp":[14,7,"#ffffff"]},
+    {"dp":[17,7,"#ffffff"]},
+    {"dp":[19,7,"#ffffff"]},
+  payload_switch: >-
+    {
+      "name" : "{{ appname }}"
+    }
+  payload_game_prestart: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+        {"dl":[3,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[5,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}
+      ],
+      "text": " {{ game_clock | replace( date_stripper | join, '') | regex_replace(timezone_regex, '') }}{{' - '}}{{- pregame_notice -}}",
+      "topText": "true",
+      "textCase": 2,
+      "duration": {{ (message_duration / 2) | int }} 
+    }
+  payload_game_start: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
+        {{ first_quarter }}
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dl":[15,3,16,3,"#ffffff"]} 
+      ], 
+      "duration": {{ message_duration }} 
+    }
+  payload_second_quarter: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
+        {{ second_quarter }}
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dl":[15,3,16,3,"#ffffff"]} 
+      ], 
+      "duration": {{ message_duration }} 
+    }
+  payload_third_quarter: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
+        {{ third_quarter }}
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dl":[15,3,16,3,"#ffffff"]} 
+      ], 
+      "duration": {{ message_duration }} 
+    }
+  payload_fourth_quarter: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
+        {{ fourth_quarter }}
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dl":[15,3,16,3,"#ffffff"]} 
+      ], 
+      "duration": {{ message_duration }} 
+    }
+  payload_set_lifetime: >-
+    {
+      "lifetime": {{ ((message_lifetime|int) * 60 * 60) | int }}
+    }
+
+trigger_variables:
+  my_sensor: !input my_sensor
+triggers:
+  - trigger: state
+    entity_id: !input my_sensor
+    to: PRE
+    id: PreGame Start
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: kickoff_in
+    id: PreGame Notice
+  - trigger: state
+    entity_id: !input my_sensor
+    to: IN
+    id: Game Start
+  - trigger: state
+    entity_id: !input my_sensor
+    to: POST
+    id: Game End
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: team_score
+    id: Team Score Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: opponent_score
+    id: Opponent Score Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: quarter
+    id: Quarter Change
+
+
+condition: [ ]
+action:
+  - repeat:
+      for_each: "{{ devices }}"
+      sequence:
+        - choose:
+            - conditions:
+                condition: or
+                conditions:
+                  - condition: trigger
+                    id:
+                      - PreGame Start
+                  - condition: and
+                    conditions:
+                      - condition: trigger
+                        id:
+                          - PreGame Notice
+                      - condition: state
+                        entity_id: !input my_sensor
+                        state: "PRE"
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_prestart }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Game Start
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_start }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Quarter Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 1
+                  below: 3
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_second_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Quarter Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 2
+                  below: 4
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_third_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Quarter Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 3
+                  below: 5
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_fourth_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Team Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 0
+                  below: 2
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_start }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Team Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 1
+                  below: 3
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_second_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Team Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 2
+                  below: 4
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_third_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Team Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 3
+                  below: 5
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_fourth_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Opponent Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 0
+                  below: 2
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_start }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Opponent Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 1
+                  below: 3
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_second_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Opponent Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 2
+                  below: 4
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_third_quarter }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Opponent Score Change
+                - condition: numeric_state
+                  entity_id: !input my_sensor
+                  attribute: quarter
+                  above: 3
+                  below: 5
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_fourth_quarter }}"
+  - repeat:
+      for_each: "{{ devices }}"
+      sequence:
+        - choose:
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Game End
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_set_lifetime }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+mode: restart
