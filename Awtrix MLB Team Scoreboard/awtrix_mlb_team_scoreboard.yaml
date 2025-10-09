@@ -223,20 +223,20 @@ variables:
     {% set start_x = 2 if cur >= 10 else 3 %}
     {% set vcolor = right_team_colors_0 if is_swapped else left_team_colors_0 %}
     {% set hcolor = left_team_colors_0 if is_swapped else right_team_colors_0 %}
-    {% set draws = [] %}
+    {% set ns = namespace(draws=[]) %}
     {% set total = 10 if cur >= 10 else 9 %}
     {% for i in range(1, total + 1) %}
       {% set vx = start_x + (i - 1) * 3 %}
       {% set hx = vx + 1 %}
       {% if i == cur_idx and cur_idx > 0 %}
-        {% set _ = draws.append('{"dp":[' ~ vx ~ ',7,"#FFFFFF"]}') %}
-        {% set _ = draws.append('{"dp":[' ~ hx ~ ',7,"#FFFFFF"]}') %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ vx ~ ',7,"#FFFFFF"]}'] %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"#FFFFFF"]}'] %}
       {% else %}
-        {% set _ = draws.append('{"dp":[' ~ vx ~ ',7,"' ~ vcolor ~ '"]}') %}
-        {% set _ = draws.append('{"dp":[' ~ hx ~ ',7,"' ~ hcolor ~ '"]}') %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ vx ~ ',7,"' ~ vcolor ~ '"]}'] %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"' ~ hcolor ~ '"]}'] %}
       {% endif %}
     {% endfor %}
-    {{ draws | join(',') }}
+    {{ ns.draws | join(',') }}
 
   team_score: >-
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
