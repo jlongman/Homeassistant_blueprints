@@ -187,9 +187,9 @@ variables:
       {% set on1 = mlb_on_first %}
       {% set on2 = mlb_on_second %}
       {% set on3 = mlb_on_third %}
-      {{ '{"dp":[14,1,"#FFFFFF"]},' if on2 else '{"dp":[14,1,"#5F5F5F"]},' }}
-      {{ '{"dp":[17,2,"#FFFFFF"]},' if on1 else '{"dp":[17,2,"#5F5F5F"]},' }}
-      {{ '{"dp":[11,2,"#FFFFFF"]}' if on3 else '{"dp":[11,2,"#5F5F5F"]}' }}
+      {{ '{"dp":[16,1,"#FFEA00"]},' if on2 else '{"dp":[16,1,"#5F5F5F"]},' }}
+      {{ '{"dp":[18,2,"#FFEA00"]},' if on1 else '{"dp":[18,2,"#5F5F5F"]},' }}
+      {{ '{"dp":[14,2,"#FFEA00"]}' if on3 else '{"dp":[14,2,"#5F5F5F"]}' }}
     {% endif %}
 
   # --- MLB Phase 4: Outs display (three pips during active at-bat) ---
