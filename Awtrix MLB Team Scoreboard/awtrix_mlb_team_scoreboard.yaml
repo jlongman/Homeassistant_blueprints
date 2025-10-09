@@ -168,13 +168,29 @@ variables:
   game_clock: "{{ state_attr(my_sensor, 'clock') }}"
 #     --- MLB Foundation (Phase 1) ---
 #     Raw MLB attributes with safe defaults
-  mlb_outs: "{{ state_attr(my_sensor, 'outs') | int(0) }}"
-  mlb_on_first: "{{ state_attr(my_sensor, 'on_first') | default(false) | bool }}"
-  mlb_on_second: "{{ state_attr(my_sensor, 'on_second') | default(false) | bool }}"
-  mlb_on_third: "{{ state_attr(my_sensor, 'on_third') | default(false) | bool }}"
+  mlb_outs: >-
+    {% if state_attr(my_sensor, 'outs')  is not none %}
+    {{ state_attr(my_sensor, 'outs') | int(0) }}
+    {% else %}0{% endif %}
+  mlb_on_first: >-
+    {% if state_attr(my_sensor, 'on_first')  is not none %}
+    {{ state_attr(my_sensor, 'on_first') | default(false) | bool }}
+    {% else %}{{ false | bool }}{% endif %}
+  mlb_on_second: >-
+    {% if state_attr(my_sensor, 'on_second')  is not none %}
+    {{ state_attr(my_sensor, 'on_second') | default(false) | bool }}
+    {% else %}{{ false | bool }}{% endif %}
+  mlb_on_third: >-
+    {% if state_attr(my_sensor, 'on_third')  is not none %}
+    {{ state_attr(my_sensor, 'on_third') | default(false) | bool }}
+    {% else %}{{ false | bool }}{% endif %}
   # TeamTracker uses 'quarter' for inning number in MLB
-  mlb_inning: "{{ state_attr(my_sensor, 'quarter') | int(0) }}"
-  mlb_clock: "{{ state_attr(my_sensor, 'clock') | default('') | string }}"
+  mlb_inning: >-
+    {% if state_attr(my_sensor, 'quarter')  is not none %}
+    {{ state_attr(my_sensor, 'quarter') | int(0) }}
+    {% else %}0{% endif %}
+  mlb_clock: >-
+    {{ state_attr(my_sensor, 'clock') | default('') | string }}
 
   # Inning state helpers (case-insensitive)
   is_top_inning: "{{ (mlb_clock | string | lower) is match('^top') }}"
@@ -239,9 +255,13 @@ variables:
     {{ ns.draws | join(',') }}
 
   team_score: >-
+    {% if state_attr(my_sensor, 'team_score') is not none %}
     {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
+    {% else %}0{% endif %}
   opponent_score: >-
+    {% if state_attr(my_sensor, 'opponent_score') is not none %}
     {{ state_attr(my_sensor, 'opponent_score') | default(0) | int }}
+    {% else %}0{% endif %}
 
   # --- MLB Phase 10: Feature flag for custom "1" rendering ---
   use_custom_one: false
