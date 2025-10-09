@@ -264,7 +264,7 @@ variables:
         {"dt":[2,1,"{{ s }}",[255,255,255]]}
       {% endif %}
     {% else %}
-      {"dt":[4,1,"{{ left_team_score }}",[255,255,255]]}
+      {"dt":[7,1,"{{ left_team_score }}",[255,255,255]]}
     {% endif %}
 
   # Custom score draw for right side (with optional custom "1")
@@ -285,7 +285,7 @@ variables:
         {"dt":[24,1,"{{ s }}",[255,255,255]]}
       {% endif %}
     {% else %}
-      {"dt":[26,1,"{{ right_team_score }}",[255,255,255]]}
+      {"dt":[24,1,"{{ right_team_score }}",[255,255,255]]}
     {% endif %}
 
   # --- MLB Phase 6: Payloads ---
@@ -306,8 +306,8 @@ variables:
           {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
         {% endif %}
 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
         {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
-        {"dl":[5,0,5,7,"{{ left_team_colors_1 }}"]},
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]},
 
