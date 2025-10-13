@@ -5,8 +5,8 @@ blueprint:
     # MLB Team Scoreboard for AWTRIX Light
     
     ## Screenshots
-  
-
+    
+    
     ## Prerequisites
     
     **Before** using this blueprint, ensure that you have **HACS** installed. You also need the ha-teamtracker integration [here](https://github.com/vasqued2/ha-teamtracker).
@@ -166,8 +166,8 @@ variables:
   opponent_colors_1: "{{ state_attr(my_sensor, 'opponent_colors')[1] }}"
   pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
   game_clock: "{{ state_attr(my_sensor, 'clock') }}"
-#     --- MLB Foundation (Phase 1) ---
-#     Raw MLB attributes with safe defaults
+  #     --- MLB Foundation (Phase 1) ---
+  #     Raw MLB attributes with safe defaults
   mlb_outs: >-
     {% if state_attr(my_sensor, 'outs')  is not none %}
     {{ state_attr(my_sensor, 'outs') | int(0) }}
@@ -203,9 +203,9 @@ variables:
       {% set on1 = mlb_on_first %}
       {% set on2 = mlb_on_second %}
       {% set on3 = mlb_on_third %}
-      {{ '{"dp":[16,1,"#FFEA00"]},' if on2 else '{"dp":[16,1,"#5F5F5F"]},' }}
-      {{ '{"dp":[18,2,"#FFEA00"]},' if on1 else '{"dp":[18,2,"#5F5F5F"]},' }}
-      {{ '{"dp":[14,2,"#FFEA00"]}' if on3 else '{"dp":[14,2,"#5F5F5F"]}' }}
+      {{ '{"df":[16,0,2,2, "#FFEA00"]},' if on2 else '{"df":[16,0,2,2,"#5F5F5F"]},' }}
+      {{ '{"df":[18,1,2,2,"#FFEA00"]},' if on1 else '{"df":[18,1,2,2,"#5F5F5F"]},' }}
+      {{ '{"df":[14,1,2,2,"#FFEA00"]}' if on3 else '{"df":[14,1,2,2,"#5F5F5F"]}' }}
     {% endif %}
 
   # --- MLB Phase 4: Outs display (three pips during active at-bat) ---
@@ -214,9 +214,9 @@ variables:
       {% set o = mlb_outs | int %}
       {% set on = '#FFFFFF' %}
       {% set off = '#5F5F5F' %}
-      {"dp":[13,5,{{ '"%s"' % (on if o >= 1 else off) }}]},
-      {"dp":[16,5,{{ '"%s"' % (on if o >= 2 else off) }}]},
-      {"dp":[19,5,{{ '"%s"' % (on if o >= 3 else off) }}]}
+      {"df":[13,4,2,2,{{ '"%s"' % (on if o >= 1 else off) }}]},
+      {"df":[16,4,2,2,{{ '"%s"' % (on if o >= 2 else off) }}]},
+      {"df":[19,4,2,2,{{ '"%s"' % (on if o >= 3 else off) }}]}
     {% endif %}
 
   # --- MLB Phase 5: Between-innings inning number (centered with top/bottom pip) ---
