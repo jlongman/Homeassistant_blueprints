@@ -223,12 +223,12 @@ variables:
   inning_display: >-
     {% if is_middle_inning %}
       {% set inn = mlb_inning | int %}
-      {% set x = 13 if inn >= 10 else 14 %}
-      {"dt":[{{ x }},2,"{{ inn }}",[255,255,255]]}
+      {% set x = 12 if inn >= 10 else 13 %}
+      {"dt":[{{ x }},0,"{{ inn }}",[255,255,255]]}
       {% if is_top_inning %}
-        ,{"dp":[15,1,"#FFFFFF"]}
+        ,{"dp":[{{x}},0,"#5F5F5F"]}
       {% elif is_bottom_inning %}
-        ,{"dp":[15,4,"#FFFFFF"]}
+        ,{"dp":[{{x}},7,"#5F5F5F"]}
       {% endif %}
     {% endif %}
 
@@ -357,9 +357,7 @@ variables:
         {{ right_score_draw }}
         {% if inning_display|trim %}
           ,{{ inning_display }}
-          ,{"dp":[16,4,"#FF0000"]}
         {% endif %}
-        ,{"dp":[16,7,"#FF0000"]}
         ,{{ inning_line }}
       ],
       "duration": {{ message_duration }}
