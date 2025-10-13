@@ -237,8 +237,10 @@ variables:
     {% set cur = mlb_inning | int %}
     {% set cur_idx = 10 if cur > 10 else cur %}
     {% set start_x = 2 if cur >= 10 else 3 %}
-    {% set vcolor = right_team_colors_0 if is_swapped else left_team_colors_0 %}
-    {% set hcolor = left_team_colors_0 if is_swapped else right_team_colors_0 %}
+    {% set disable_vcolor = right_team_colors_0 if is_swapped else left_team_colors_0 %}
+    {% set vcolor = "#5f5f5f" %}
+    {% set disable_hcolor = left_team_colors_0 if is_swapped else right_team_colors_0 %}
+    {% set hcolor = "#5f5f5f" %}
     {% set ns = namespace(draws=[]) %}
     {% set total = 10 if cur >= 10 else 9 %}
     {% for i in range(1, total + 1) %}
@@ -246,7 +248,7 @@ variables:
       {% set hx = vx + 1 %}
       {% if i == cur_idx and cur_idx > 0 %}
         {% set ns.draws = ns.draws + ['{"dp":[' ~ vx ~ ',7,"#F5F5F5"]}'] %}
-        {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"#5F5F5F"]}'] %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"#F5F5F5"]}'] %}
       {% else %}
         {% set ns.draws = ns.draws + ['{"dp":[' ~ vx ~ ',7,"' ~ vcolor ~ '"]}'] %}
         {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"' ~ hcolor ~ '"]}'] %}
