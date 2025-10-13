@@ -224,11 +224,11 @@ variables:
     {% if is_middle_inning %}
       {% set inn = mlb_inning | int %}
       {% set x = 13 if inn >= 10 else 14 %}
-      {"dt":[{{ x }},2,"{{ inn }}",[255,255,255]]},
+      {"dt":[{{ x }},2,"{{ inn }}",[255,255,255]]}
       {% if is_top_inning %}
-        {"dp":[15,1,"#FFFFFF"]}
+        ,{"dp":[15,1,"#FFFFFF"]}
       {% elif is_bottom_inning %}
-        {"dp":[15,4,"#FFFFFF"]}
+        ,{"dp":[15,4,"#FFFFFF"]}
       {% endif %}
     {% endif %}
 
