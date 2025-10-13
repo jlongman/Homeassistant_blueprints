@@ -286,7 +286,7 @@ variables:
         {"dt":[2,1,"{{ s }}",[255,255,255]]}
       {% endif %}
     {% else %}
-      {"dt":[7,1,"{{ left_team_score }}",[255,255,255]]}
+      {"dt":[5,1,"{{ left_team_score }}",[255,255,255]]}
     {% endif %}
 
   # Custom score draw for right side (with optional custom "1")
