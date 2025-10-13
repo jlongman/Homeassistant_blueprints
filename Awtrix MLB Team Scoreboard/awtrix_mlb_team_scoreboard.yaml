@@ -203,9 +203,9 @@ variables:
       {% set on1 = mlb_on_first %}
       {% set on2 = mlb_on_second %}
       {% set on3 = mlb_on_third %}
-      {{ '{"df":[16,0,2,2, "#FFEA00"]},' if on2 else '{"df":[16,0,2,2,"#5F5F5F"]},' }}
-      {{ '{"df":[18,1,2,2,"#FFEA00"]},' if on1 else '{"df":[18,1,2,2,"#5F5F5F"]},' }}
-      {{ '{"df":[14,1,2,2,"#FFEA00"]}' if on3 else '{"df":[14,1,2,2,"#5F5F5F"]}' }}
+      {{ '{"df":[15,0,2,2, "#FFEA00"]},' if on2 else '{"df":[15,0,2,2,"#5F5F5F"]},' }}
+      {{ '{"df":[17,1,2,2,"#FFEA00"]},' if on1 else '{"df":[17,1,2,2,"#5F5F5F"]},' }}
+      {{ '{"df":[13,1,2,2,"#FFEA00"]}' if on3 else '{"df":[13,1,2,2,"#5F5F5F"]}' }}
     {% endif %}
 
   # --- MLB Phase 4: Outs display (three pips during active at-bat) ---
@@ -214,9 +214,9 @@ variables:
       {% set o = mlb_outs | int %}
       {% set on = '#FFFFFF' %}
       {% set off = '#5F5F5F' %}
-      {"df":[13,4,2,2,{{ '"%s"' % (on if o >= 1 else off) }}]},
-      {"df":[16,4,2,2,{{ '"%s"' % (on if o >= 2 else off) }}]},
-      {"df":[19,4,2,2,{{ '"%s"' % (on if o >= 3 else off) }}]}
+      {"df":[12,4,2,2,{{ '"%s"' % (on if o >= 1 else off) }}]},
+      {"df":[15,4,2,2,{{ '"%s"' % (on if o >= 2 else off) }}]},
+      {"df":[18,4,2,2,{{ '"%s"' % (on if o >= 3 else off) }}]}
     {% endif %}
 
   # --- MLB Phase 5: Between-innings inning number (centered with top/bottom pip) ---
@@ -316,12 +316,12 @@ variables:
     {
       "draw":[
         {% if is_top_inning %}
-          {"df":[0,0,11,8,"{{ left_team_colors_0 }}"]},
-          {"df":[11,0,21,8,"{{ right_team_colors_0 }}"]},
+          {"df":[0,0,21,8,"{{ left_team_colors_0 }}"]},
+          {"df":[22,0,10,8,"{{ right_team_colors_0 }}"]},
           {"dp":[21,0,"#00FF00"]},
         {% elif is_bottom_inning %}
-          {"df":[0,0,22,8,"{{ left_team_colors_0 }}"]},
-          {"df":[22,0,10,8,"{{ right_team_colors_0 }}"]},
+          {"df":[0,0,12,8,"{{ left_team_colors_0 }}"]},
+          {"df":[12,0,21,8,"{{ right_team_colors_0 }}"]},
           {"dp":[10,0,"#00FF00"]},
         {% else %}
           {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
