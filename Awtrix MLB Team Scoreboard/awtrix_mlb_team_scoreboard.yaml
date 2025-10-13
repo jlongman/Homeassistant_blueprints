@@ -317,15 +317,14 @@ variables:
       "draw":[
         {% if is_top_inning %}
           {"df":[0,0,21,8,"{{ left_team_colors_0 }}"]},
-          {"df":[22,0,10,8,"{{ right_team_colors_0 }}"]},
-          {"dp":[21,0,"#00FF00"]},
+          {"df":[21,0,10,8,"{{ right_team_colors_0 }}"]},
         {% elif is_bottom_inning %}
           {"df":[0,0,12,8,"{{ left_team_colors_0 }}"]},
           {"df":[12,0,21,8,"{{ right_team_colors_0 }}"]},
-          {"dp":[10,0,"#00FF00"]},
         {% else %}
           {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
           {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+          {"dp":[16,0,"#00FF00"]},
         {% endif %}
 
         {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
@@ -352,10 +351,15 @@ variables:
         {"dl":[5,0,5,7,"{{ left_team_colors_1 }}"]},
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]},
+          {"dp":[16,0,"#FF0000"]},
 
         {{ left_score_draw }},
         {{ right_score_draw }}
-        {% if inning_display|trim %},{{ inning_display }}{% endif %}
+        {% if inning_display|trim %}
+          ,{{ inning_display }}
+          ,{"dp":[16,4,"#FF0000"]}
+        {% endif %}
+        ,{"dp":[16,7,"#FF0000"]}
         ,{{ inning_line }}
       ],
       "duration": {{ message_duration }}
