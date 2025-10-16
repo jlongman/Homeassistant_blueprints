@@ -1,0 +1,592 @@
+blueprint:
+  name: "AWTRIX - MLB Team Scoreboard"
+  author: Hank_the_Tank
+  description: >
+    # MLB Team Scoreboard for AWTRIX Light
+    
+    ## Screenshots
+    
+    
+    ## Prerequisites
+    
+    **Before** using this blueprint, ensure that you have **HACS** installed. You also need the ha-teamtracker integration [here](https://github.com/vasqued2/ha-teamtracker).
+    
+    ## Credits
+
+    to Blueforcer for Awtrix Light
+
+    If you want to support his hard work in developing awtrix light, please consider to buy your Ulanzi clock with his affiliate links
+    [EU] [link](https://www.ulanzi.de/products/ulanzi-pixel-smart-uhr-2882?ref=28e02dxl)
+    [US] [link](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882?ref=28e02dxl)
+
+    If you already have hundreds of clocks, there are more ways to support him.
+
+    [Github](https://github.com/Blueforcer/awtrix-light#support)
+
+    wanna join the [Darkside](https://discord.gg/a3n8spsn)?
+
+    ## Get the Awtrix Light Companion App for iOS/Android
+
+    <a href='https://play.google.com/store/apps/details?id=de.awtrix.light&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
+    <img style="width: 100px; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/playstore_button.png'/>
+    </a>
+    <a href='https://apps.apple.com/de/app/awtrix-light/id6459478110'>
+    <img style="width: 100px; height: auto;" alt='Get it on Google Play' src='https://raw.githubusercontent.com/fettesb/Homeassistant_blueprints/main/appstore_button.png'/>
+    </a>
+
+    **Special Thanks to RobG** This would not be possible without him
+    **Thanks in advance**
+
+  domain: automation
+
+  input:
+    awtrix:
+      name: AWTRIX Device
+      description: Select the Awtrix Light
+      selector:
+        device:
+          integration: mqtt
+          manufacturer: Blueforcer
+          model: AWTRIX 3
+          multiple: true
+
+    appname:
+      name: Awtrix Application name
+      description: >-
+        This is the app name listed in the MQTT topic - it should be unique
+      default: "sportsteamscore"
+      selector:
+        text:
+
+    message_duration:
+      name: Message Duration ⏱️
+      description: >-
+        How long should the message remain on the screen (in seconds).
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "sec"
+      default: 15
+
+    message_lifetime:
+      name: Score Lifetime ⏱️
+      description: >-
+        How long should the score remain on the screen (in hours) after the game ends.
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "hours"
+      default: 1
+
+    my_sensor:
+      name: Team Sensor
+      description: Select your Team Sensor
+      selector:
+        entity:
+          filter:
+            - integration: teamtracker
+
+    display_mode:
+      name: Display Mode
+      description: >-
+        Choose how teams are displayed: 
+        'ESPN default' - Selected Team is on the left, Other Team is on the right  
+        'Traditional' - Away Team At Home Team
+      default: "my_team_left"
+      selector:
+        select:
+          options:
+            - label: "ESPN default"
+              value: "my_team_left"
+            - label: "Traditional"
+              value: "home_team_right"
+
+  source_url: https://raw.githubusercontent.com/jlongman/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
+
+variables:
+  device_ids: !input awtrix
+  devices: >-
+    {% macro get_device(device_id) %}
+      {{ states((device_entities(device_id) | select('search','device_topic') | list)[0] | default('unknown')) }}
+    {% endmacro %}
+    {% set ns = namespace(devices=[]) %}
+    {% for device_id in device_ids %}
+      {% set device=get_device(device_id)|replace(' ','')|replace('\n','') %}
+      {% set ns.devices = ns.devices + [ device ] %}
+    {% endfor %}
+    {{ ns.devices | reject('match','unavailable|unknown') | list }}
+  appname: !input appname
+  my_sensor: !input my_sensor
+  message_duration: !input message_duration
+  message_lifetime: !input message_lifetime
+  display_mode: !input display_mode
+  date_stripper: "{{ [ now().month, '/', now().day, ' - '] | join('') }}"
+  timezone_regex: " ?[A-Z][SD]T"
+  is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
+  left_team_colors_0: >-
+    {% if is_swapped %}
+    {{ state_attr(my_sensor, 'opponent_colors')[0] }}
+    {% else %}
+    {{ state_attr(my_sensor, 'team_colors')[0] }}
+    {% endif %}
+  left_team_colors_1: >-
+    {% if is_swapped %}
+      {{ state_attr(my_sensor, 'opponent_colors')[1] }}
+    {% else %}
+      {{ state_attr(my_sensor, 'team_colors')[1] }}
+    {% endif %}
+  right_team_colors_0: >-
+    {% if is_swapped %}
+      {{ state_attr(my_sensor, 'team_colors')[0] }}
+    {% else %}
+      {{ state_attr(my_sensor, 'opponent_colors')[0] }}
+    {% endif %}
+  right_team_colors_1: >-
+    {% if is_swapped %}
+    {{ state_attr(my_sensor, 'team_colors')[1] }}
+    {% else %}
+    {{ state_attr(my_sensor, 'opponent_colors')[1] }}
+    {% endif %}
+  left_team_score: >-
+    {% if is_swapped %}
+      {{ state_attr(my_sensor, 'opponent_score') | default(0) | int }}
+    {% else %}
+      {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
+    {% endif %}
+  right_team_score: >-
+    {% if is_swapped %}
+      {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
+    {% else %}
+      {{ state_attr(my_sensor, 'opponent_score') | default(0) | int }}
+    {% endif %}
+  team_colors_0: "{{ state_attr(my_sensor, 'team_colors')[0] }}"
+  team_colors_1: "{{ state_attr(my_sensor, 'team_colors')[1] }}"
+  opponent_colors_0: "{{ state_attr(my_sensor, 'opponent_colors')[0] }}"
+  opponent_colors_1: "{{ state_attr(my_sensor, 'opponent_colors')[1] }}"
+  pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
+  game_clock: "{{ state_attr(my_sensor, 'clock') }}"
+  #     --- MLB Foundation (Phase 1) ---
+  #     Raw MLB attributes with safe defaults
+  mlb_outs: >-
+    {% if state_attr(my_sensor, 'outs')  is not none %}
+    {{ state_attr(my_sensor, 'outs') | int(0) }}
+    {% else %}0{% endif %}
+  mlb_on_first: >-
+    {% if state_attr(my_sensor, 'on_first')  is not none %}
+    {{ state_attr(my_sensor, 'on_first') | default(false) | bool }}
+    {% else %}{{ false | bool }}{% endif %}
+  mlb_on_second: >-
+    {% if state_attr(my_sensor, 'on_second')  is not none %}
+    {{ state_attr(my_sensor, 'on_second') | default(false) | bool }}
+    {% else %}{{ false | bool }}{% endif %}
+  mlb_on_third: >-
+    {% if state_attr(my_sensor, 'on_third')  is not none %}
+    {{ state_attr(my_sensor, 'on_third') | default(false) | bool }}
+    {% else %}{{ false | bool }}{% endif %}
+  # TeamTracker uses 'quarter' for inning number in MLB
+  mlb_inning: >-
+    {% if state_attr(my_sensor, 'quarter')  is not none %}
+    {{ state_attr(my_sensor, 'quarter') | int(0) }}
+    {% else %}0{% endif %}
+  mlb_clock: >-
+    {{ state_attr(my_sensor, 'clock') | default('') | string }}
+
+  # Inning state helpers (case-insensitive)
+  is_top_inning: "{{ (mlb_clock | string | lower) is match('^top') }}"
+  is_bottom_inning: "{{ (mlb_clock | string | lower) is match('^bottom') }}"
+  is_middle_inning: "{{ (mlb_clock | string | lower) is match('^middle') or (mlb_clock | string | lower) is match('^end') }}"
+
+  # --- MLB Phase 3: Bases display (diamond in middle section during active at-bat) ---
+  bases_display: >-
+    {% if not is_middle_inning %}
+      {% set on1 = mlb_on_first %}
+      {% set on2 = mlb_on_second %}
+      {% set on3 = mlb_on_third %}
+      {{ '{"df":[15,0,2,2, "#FFEA00"]},' if on2 else '{"df":[15,0,2,2,"#5F5F5F"]},' }}
+      {{ '{"df":[17,1,2,2,"#FFEA00"]},' if on1 else '{"df":[17,1,2,2,"#5F5F5F"]},' }}
+      {{ '{"df":[13,1,2,2,"#FFEA00"]}' if on3 else '{"df":[13,1,2,2,"#5F5F5F"]}' }}
+    {% endif %}
+
+  # --- MLB Phase 4: Outs display (three pips during active at-bat) ---
+  outs_display: >-
+    {% if not is_middle_inning %}
+      {% set o = mlb_outs | int %}
+      {% set on = '#FFFFFF' %}
+      {% set off = '#5F5F5F' %}
+      {"df":[12,4,2,2,{{ '"%s"' % (on if o >= 1 else off) }}]},
+      {"df":[15,4,2,2,{{ '"%s"' % (on if o >= 2 else off) }}]},
+      {"df":[18,4,2,2,{{ '"%s"' % (on if o >= 3 else off) }}]}
+    {% endif %}
+
+  # --- MLB Phase 5: Between-innings inning number (centered with top/bottom pip) ---
+  inning_display: >-
+    {% if is_middle_inning %}
+      {% set inn = mlb_inning | int %}
+      {% set x = 12 if inn >= 10 else 13 %}
+      {"dt":[{{ x }},0,"{{ inn }}",[255,255,255]]}
+      {% if is_top_inning %}
+        ,{"dp":[{{x}},0,"#5F5F5F"]}
+      {% elif is_bottom_inning %}
+        ,{"dp":[{{x}},7,"#5F5F5F"]}
+      {% endif %}
+    {% endif %}
+
+  # --- MLB Phase 9: Inning line (bottom row, visitor/home pips) ---
+  inning_line: >-
+    {% set cur = mlb_inning | int %}
+    {% set cur_idx = 10 if cur > 10 else cur %}
+    {% set start_x = 2 if cur >= 10 else 3 %}
+    {% set disable_vcolor = right_team_colors_0 if is_swapped else left_team_colors_0 %}
+    {% set vcolor = "#5f5f5f" %}
+    {% set disable_hcolor = left_team_colors_0 if is_swapped else right_team_colors_0 %}
+    {% set hcolor = "#5f5f5f" %}
+    {% set ns = namespace(draws=[]) %}
+    {% set total = 10 if cur >= 10 else 9 %}
+    {% for i in range(1, total + 1) %}
+      {% set vx = start_x + (i - 1) * 3 %}
+      {% set hx = vx + 1 %}
+      {% if i == cur_idx and cur_idx > 0 %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ vx ~ ',7,"#F5F5F5"]}'] %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"#F5F5F5"]}'] %}
+      {% else %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ vx ~ ',7,"' ~ vcolor ~ '"]}'] %}
+        {% set ns.draws = ns.draws + ['{"dp":[' ~ hx ~ ',7,"' ~ hcolor ~ '"]}'] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.draws | join(',') }}
+
+  team_score: >-
+    {% if state_attr(my_sensor, 'team_score') is not none %}
+    {{ state_attr(my_sensor, 'team_score') | default(0) | int }}
+    {% else %}0{% endif %}
+  opponent_score: >-
+    {% if state_attr(my_sensor, 'opponent_score') is not none %}
+    {{ state_attr(my_sensor, 'opponent_score') | default(0) | int }}
+    {% else %}0{% endif %}
+
+  # --- MLB Phase 10: Feature flag for custom "1" rendering ---
+  use_custom_one: true
+
+  # Custom score draw for left side (with optional custom "1")
+  left_score_draw: >-
+    {% if use_custom_one %}
+      {% set s = left_team_score | int %}
+      {% if s < 10 %}
+        {% if s == 1 %}
+          {"dp":[5,1,"#FFFFFF"]},{"dl":[6,1,6,5,"#FFFFFF"]}
+        {% else %}
+          {"dt":[5,1,"{{ s }}",[255,255,255]]}
+        {% endif %}
+      {% elif s >= 10 and s <= 19 %}
+        {% set ones = s % 10 %}
+        {"dp":[2,1,"#FFFFFF"]},{"dl":[3,1,3,5,"#FFFFFF"]},
+        {"dt":[5,1,"{{ ones }}",[255,255,255]]}
+      {% else %}
+        {"dt":[2,1,"{{ s }}",[255,255,255]]}
+      {% endif %}
+    {% else %}
+      {"dt":[5,1,"{{ left_team_score }}",[255,255,255]]}
+    {% endif %}
+
+  # Custom score draw for right side (with optional custom "1")
+  right_score_draw: >-
+    {% if use_custom_one %}
+      {% set s = right_team_score | int %}
+      {% if s < 10 %}
+        {% if s == 1 %}
+          {"dp":[23,1,"#FFFFFF"]},{"dl":[24,1,24,5,"#FFFFFF"]}
+        {% else %}
+          {"dt":[26,1,"{{ s }}",[255,255,255]]}
+        {% endif %}
+      {% elif s >= 10 and s <= 19 %}
+        {% set ones = s % 10 %}
+        {"dp":[23,1,"#FFFFFF"]},{"dl":[24,1,24,5,"#FFFFFF"]},
+        {"dt":[26,1,"{{ ones }}",[255,255,255]]}
+      {% else %}
+        {"dt":[23,1,"{{ s }}",[255,255,255]]}
+      {% endif %}
+    {% else %}
+      {"dt":[24,1,"{{ right_team_score }}",[255,255,255]]}
+    {% endif %}
+
+  # --- MLB Phase 6: Payloads ---
+  # Active at-bat payload (background split 2/3 vs 1/3, scores, bases, outs)
+  payload_mlb_active: >-
+    {
+      "draw":[
+        {% if is_top_inning %}
+          {"df":[0,0,21,8,"{{ left_team_colors_0 }}"]},
+          {"df":[21,0,11,8,"{{ right_team_colors_0 }}"]},
+        {% elif is_bottom_inning %}
+          {"df":[0,0,12,8,"{{ left_team_colors_0 }}"]},
+          {"df":[12,0,21,8,"{{ right_team_colors_0 }}"]},
+        {% else %}
+          {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+          {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+          {"dp":[16,0,"#00FF00"]},
+        {% endif %}
+
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]},
+
+        {{ left_score_draw }},
+        {{ right_score_draw }}
+        {% if bases_display|trim %},{{ bases_display }}{% endif %}
+        {% if outs_display|trim %},{{ outs_display }}{% endif %}
+        ,{{ inning_line }}
+        {% if is_swapped %}
+        ,{"dp":[0,0,"#FF0000"]}
+        {% else %}
+        ,{"dp":[0,0,"#0000FF"]}
+        {% endif %}
+      ],
+      "duration": {{ message_duration }}
+    }
+
+  # Between-innings payload (50/50 background, scores, inning number/pip only)
+  payload_mlb_between: >-
+    {
+      "draw":[
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+    
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]},
+
+        {{ left_score_draw }},
+        {{ right_score_draw }}
+        {% if inning_display|trim %}
+          ,{{ inning_display }}
+        {% endif %}
+        ,{{ inning_line }}
+      ],
+      "duration": {{ message_duration }}
+    }
+
+  payload_switch: >-
+    {
+      "name" : "{{ appname }}"
+    }
+  payload_game_prestart: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
+        {"dl":[3,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[5,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]},
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}
+      ],
+      "text": " {{ game_clock | replace( date_stripper | join, '') | regex_replace(timezone_regex, '') }}{{' - '}}{{- pregame_notice -}}",
+      "topText": "true",
+      "textCase": 2,
+      "duration": {{ (message_duration / 2) | int }} 
+    }
+  payload_game_start: >-
+    {
+      "draw":[ 
+        {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},     
+        {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]}, 
+        {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[3,0,3,7,"{{ left_team_colors_1 }}"]},
+        {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
+        {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
+        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dl":[15,3,16,3,"#ffffff"]} 
+      ], 
+      "duration": {{ message_duration }} 
+    }
+  payload_set_lifetime: >-
+    {
+      "lifetime": {{ ((message_lifetime|int) * 60 * 60) | int }}
+    }
+
+trigger_variables:
+  my_sensor: !input my_sensor
+triggers:
+  - trigger: state
+    entity_id: !input my_sensor
+    to: PRE
+    id: PreGame Start
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: kickoff_in
+    id: PreGame Notice
+  - trigger: state
+    entity_id: !input my_sensor
+    to: IN
+    id: Game Start
+  - trigger: state
+    entity_id: !input my_sensor
+    to: POST
+    id: Game End
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: team_score
+    id: Team Score Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: opponent_score
+    id: Opponent Score Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: quarter
+    id: Quarter Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: clock
+    id: MLB Clock Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: outs
+    id: MLB Outs Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: on_first
+    id: MLB First Base Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: on_second
+    id: MLB Second Base Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: on_third
+    id: MLB Third Base Change
+
+
+condition: [ ]
+action:
+  - repeat:
+      for_each: "{{ devices }}"
+      sequence:
+        - choose:
+            - conditions:
+                condition: or
+                conditions:
+                  - condition: trigger
+                    id:
+                      - PreGame Start
+                  - condition: and
+                    conditions:
+                      - condition: trigger
+                        id:
+                          - PreGame Notice
+                      - condition: state
+                        entity_id: !input my_sensor
+                        state: "PRE"
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_prestart }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Game Start
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_game_start }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Team Score Change
+                    - Opponent Score Change
+                    - MLB Outs Change
+                    - MLB First Base Change
+                    - MLB Second Base Change
+                    - MLB Third Base Change
+                    - Quarter Change
+                - condition: state
+                  entity_id: !input my_sensor
+                  state: "IN"
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: >-
+                      {% if is_middle_inning %}
+                        {{ payload_mlb_between }}
+                      {% else %}
+                        {{ payload_mlb_active }}
+                      {% endif %}
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - MLB Clock Change
+                - condition: state
+                  entity_id: !input my_sensor
+                  state: "IN"
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: >-
+                      {% if is_middle_inning %}
+                        {{ payload_mlb_between }}
+                      {% else %}
+                        {{ payload_mlb_active }}
+                      {% endif %}
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+
+  - repeat:
+      for_each: "{{ devices }}"
+      sequence:
+        - choose:
+            - conditions:
+                - condition: trigger
+                  id:
+                    - Game End
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ payload_set_lifetime }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+mode: restart
