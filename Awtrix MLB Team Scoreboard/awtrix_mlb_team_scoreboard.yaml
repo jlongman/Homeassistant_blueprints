@@ -146,7 +146,7 @@ variables:
   right_team_colors_1: >-
     {% if is_swapped %}
     {{ state_attr(my_sensor, 'team_colors')[1] }}
-    {% else %}]
+    {% else %}
     {{ state_attr(my_sensor, 'opponent_colors')[1] }}
     {% endif %}
   left_team_score: >-
