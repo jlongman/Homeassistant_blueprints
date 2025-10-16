@@ -123,7 +123,7 @@ variables:
   message_lifetime: !input message_lifetime
   date_stripper: "{{ [ now().month, '/', now().day, ' - '] | join('') }}"
   timezone_regex: " ?[A-Z][SD]T"
-  is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
+  is_swapped: {% if display_mode == 'home_team_right' and state_attr(my_sensor, 'team_homeaway') == 'home'%}{{ true | bool }}{% else %}{{ false| bool }}{% endif %}
   left_team_colors_0: >-
     {% if is_swapped %}
     {{ state_attr(my_sensor, 'opponent_colors')[0] }}
