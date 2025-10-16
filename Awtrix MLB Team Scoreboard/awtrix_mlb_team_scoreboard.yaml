@@ -121,9 +121,10 @@ variables:
   my_sensor: !input my_sensor
   message_duration: !input message_duration
   message_lifetime: !input message_lifetime
+  display_mode: !input display_mode
   date_stripper: "{{ [ now().month, '/', now().day, ' - '] | join('') }}"
   timezone_regex: " ?[A-Z][SD]T"
-  is_swapped: {% if display_mode == 'home_team_right' and state_attr(my_sensor, 'team_homeaway') == 'home'%}{{ true | bool }}{% else %}{{ false| bool }}{% endif %}
+  is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
   left_team_colors_0: >-
     {% if is_swapped %}
     {{ state_attr(my_sensor, 'opponent_colors')[0] }}
