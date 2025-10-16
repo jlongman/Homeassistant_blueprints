@@ -276,7 +276,7 @@ variables:
         {% if s == 1 %}
           {"dp":[5,1,"#FFFFFF"]},{"dl":[6,1,6,5,"#FFFFFF"]}
         {% else %}
-          {"dt":[6,1,"{{ s }}",[255,255,255]]}
+          {"dt":[5,1,"{{ s }}",[255,255,255]]}
         {% endif %}
       {% elif s >= 10 and s <= 19 %}
         {% set ones = s % 10 %}
@@ -337,6 +337,11 @@ variables:
         {% if bases_display|trim %},{{ bases_display }}{% endif %}
         {% if outs_display|trim %},{{ outs_display }}{% endif %}
         ,{{ inning_line }}
+        {% if is_swapped %}
+        ,{"dp":[0,0,"#FF0000"]}
+        {% else %}
+        ,{"dp":[0,0,"#0000FF"]}
+        {% endif %}
       ],
       "duration": {{ message_duration }}
     }
