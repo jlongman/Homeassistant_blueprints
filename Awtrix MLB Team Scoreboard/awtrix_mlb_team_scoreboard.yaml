@@ -317,7 +317,6 @@ variables:
         {% else %}
           {"df":[0,0,16,8,"{{ left_team_colors_0 }}"]},
           {"df":[16,0,16,8,"{{ right_team_colors_0 }}"]},
-          {"dp":[16,0,"#00FF00"]},
         {% endif %}
 
         {"dl":[1,0,1,7,"{{ left_team_colors_1 }}"]},
@@ -330,11 +329,6 @@ variables:
         {% if bases_display|trim %},{{ bases_display }}{% endif %}
         {% if outs_display|trim %},{{ outs_display }}{% endif %}
         ,{{ inning_line }}
-        {% if is_swapped %}
-        ,{"dp":[0,0,"#FF0000"]}
-        {% else %}
-        ,{"dp":[0,0,"#0000FF"]}
-        {% endif %}
       ],
       "duration": {{ message_duration }}
     }
