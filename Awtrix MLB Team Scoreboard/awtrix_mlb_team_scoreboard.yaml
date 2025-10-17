@@ -211,17 +211,25 @@ variables:
       {% set ball1 = mlb_balls >= 1 %}
       {% set ball2 = mlb_balls >= 2 %}
       {% set ball3 = mlb_balls >= 3 %}
+      {% set ball4 = mlb_balls >= 4 %}
       {{ '{"dp":[21,0, "#FFEA00"]},' if ball1 else '{"dp":[21,0,"#5F5F5F"]},' }}
       {{ '{"dp":[21,1, "#FFEA00"]},' if ball2 else '{"dp":[21,1,"#5F5F5F"]},' }}
       {{ '{"dp":[21,2, "#FFEA00"]}' if ball3 else '{"dp":[21,2,"#5F5F5F"]}' }}
+      {% if ball4 %}
+      ,{"dp":[21,3, "#FFEA00"]}
+      {% endif %}
     {% endif %}
 
   strikes_display: >-
     {% if not is_middle_inning %}
       {% set strike1 = mlb_strikes >= 1 %}
       {% set strike2 = mlb_strikes >= 2 %}
+      {% set strike3 = mlb_strikes >= 3 %}
       {{ '{"dp":[21,4, "#FF0000"]},' if strike1 else '{"dp":[21,4,"#5F5F5F"]},' }}
       {{ '{"dp":[21,5, "#FF0000"]}' if strike2 else '{"dp":[21,5,"#5F5F5F"]}' }}
+      {% if strike3 %}
+      ,{"dp":[21,6, "#FF0000"]}
+      {% endif %}
     {% endif %}
 
   # --- MLB Phase 3: Bases display (diamond in middle section during active at-bat) ---
