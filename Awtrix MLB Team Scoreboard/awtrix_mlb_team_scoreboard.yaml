@@ -185,6 +185,14 @@ variables:
     {% if state_attr(my_sensor, 'on_third')  is not none %}
     {{ state_attr(my_sensor, 'on_third') | default(false) | bool }}
     {% else %}{{ false | bool }}{% endif %}
+  mlb_balls: >-
+    {% if state_attr(my_sensor, 'balls')  is not none %}
+    {{ state_attr(my_sensor, 'balls') | int(0) }}
+    {% else %}0{% endif %}
+  mlb_strikes: >-
+    {% if state_attr(my_sensor, 'strikes')  is not none %}
+    {{ state_attr(my_sensor, 'strikes') | int(0) }}
+    {% else %}0{% endif %}
   # TeamTracker uses 'quarter' for inning number in MLB
   mlb_inning: >-
     {% if state_attr(my_sensor, 'quarter')  is not none %}
@@ -197,6 +205,24 @@ variables:
   is_top_inning: "{{ (mlb_clock | string | lower) is match('^top') }}"
   is_bottom_inning: "{{ (mlb_clock | string | lower) is match('^bottom') }}"
   is_middle_inning: "{{ (mlb_clock | string | lower) is match('^middle') or (mlb_clock | string | lower) is match('^end') }}"
+
+  balls_display: >-
+    {% if not is_middle_inning %}
+      {% set ball1 = mlb_balls >= 1 %}
+      {% set ball2 = mlb_balls >= 2 %}
+      {% set ball3 = mlb_balls >= 3 %}
+      {{ '{"dp":[21,0, "#FFEA00"]},' if ball1 else '{"dp":[21,0,"#5F5F5F"]},' }}
+      {{ '{"dp":[21,1, "#FFEA00"]},' if ball2 else '{"dp":[21,1,"#5F5F5F"]},' }}
+      {{ '{"dp":[21,2, "#FFEA00"]}' if ball3 else '{"dp":[21,2,"#5F5F5F"]}' }}
+    {% endif %}
+
+  strikes_display: >-
+    {% if not is_middle_inning %}
+      {% set strike1 = mlb_strikes >= 1 %}
+      {% set strike2 = mlb_strikes >= 2 %}
+      {{ '{"dp":[21,4, "#FF0000"]},' if strike1 else '{"dp":[21,4,"#5F5F5F"]},' }}
+      {{ '{"dp":[21,5, "#FF0000"]}' if strike2 else '{"dp":[21,5,"#5F5F5F"]}' }}
+    {% endif %}
 
   # --- MLB Phase 3: Bases display (diamond in middle section during active at-bat) ---
   bases_display: >-
@@ -328,6 +354,8 @@ variables:
         {{ right_score_draw }}
         {% if bases_display|trim %},{{ bases_display }}{% endif %}
         {% if outs_display|trim %},{{ outs_display }}{% endif %}
+        {% if balls_display|trim %},{{ balls_display }}{% endif %}
+        {% if strikes_display|trim %},{{ strikes_display }}{% endif %}
         ,{{ inning_line }}
       ],
       "duration": {{ message_duration }}
@@ -445,6 +473,15 @@ triggers:
     entity_id: !input my_sensor
     attribute: on_third
     id: MLB Third Base Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: balls
+    id: MLB Balls Change
+  - trigger: state
+    entity_id: !input my_sensor
+    attribute: strikes
+    id: MLB Strikes Change
+
 
 
 condition: [ ]
@@ -507,6 +544,8 @@ action:
                     - MLB First Base Change
                     - MLB Second Base Change
                     - MLB Third Base Change
+                    - MLB Balls Change
+                    - MLB Strikes Change
                     - Quarter Change
                 - condition: state
                   entity_id: !input my_sensor
