@@ -254,6 +254,18 @@ variables:
     {% else %}
       {{ raw_score|string }}
     {% endif %}
+  left_team_score_x: >-
+    {% if left_team_score|string|length == 1 %}
+      11
+    {% else %}
+      7
+    {% endif %}
+  right_team_score_x: >-
+    {% if right_team_score|string|length == 1 %}
+      18
+    {% else %}
+      18
+    {% endif %}
   team_colors_0: >-
     {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
     {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
@@ -347,8 +359,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ first_quarter }}
-        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -363,8 +375,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ second_quarter }}
-        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -379,8 +391,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ third_quarter }}
-        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -395,8 +407,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ fourth_quarter }}
-        {"dt":[7, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[18, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
