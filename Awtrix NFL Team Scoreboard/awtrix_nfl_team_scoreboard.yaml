@@ -133,6 +133,13 @@ blueprint:
             - label: "Traditional"
               value: "home_team_right"
 
+    score_leading_zero:
+      name: Leading Zero
+      description: "Display a leading zero for scores < 10 (e.g., 07 vs 7)"
+      default: true
+      selector:
+        boolean:
+
   source_url: https://raw.githubusercontent.com/jlongman/Homeassistant_blueprints/main/Awtrix%20NFL%20Team%20Scoreboard/awtrix_nfl_team_scoreboard.yaml
 
 variables:
@@ -157,6 +164,7 @@ variables:
   timezone_regex: " ?[A-Z][SD]T"
   my_timer_1st_2nd_intermission: !input my_timer_1st_2nd_intermission
   my_timer_overtime_intermission: !input my_timer_overtime_intermission
+  score_leading_zero: !input score_leading_zero
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
   intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
   is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
@@ -230,7 +238,7 @@ variables:
     {% else %}
       {% set raw_score = state_attr(my_sensor, 'team_score') %}
     {% endif %}
-    {% if raw_score|int < 10 %}
+    {% if score_leading_zero and raw_score|int < 10 %}
       {{ "0" + raw_score|string }}
     {% else %}
       {{ raw_score|string }}
@@ -241,7 +249,7 @@ variables:
     {% else %}
       {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
     {% endif %}
-    {% if raw_score|int < 10 %}
+    {% if score_leading_zero and raw_score|int < 10 %}
       {{ "0" + raw_score|string }}
     {% else %}
       {{ raw_score|string }}
@@ -278,14 +286,14 @@ variables:
   game_clock: "{{ state_attr(my_sensor, 'clock') }}"
   team_score: >-
     {% set raw_team_score = state_attr(my_sensor, 'team_score') %}
-    {% if raw_team_score|int < 10 %}
+    {% if score_leading_zero and raw_team_score|int < 10 %}
       {{  "0" + raw_team_score|string }}
     {% else %}
         {{ raw_team_score|string }}
     {% endif %}
   opponent_score: >-
     {% set raw_opponent_score = state_attr(my_sensor, 'opponent_score') %}
-    {% if raw_opponent_score|int < 10 %}
+    {% if score_leading_zero and raw_opponent_score|int < 10 %}
         {{ "0" + raw_opponent_score|string }}
     {% else %}
         {{ raw_opponent_score|string }}
