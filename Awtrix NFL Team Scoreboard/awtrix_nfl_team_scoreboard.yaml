@@ -453,7 +453,13 @@ triggers:
 
   - trigger: template
     value_template: >-
-      {{ (states(my_timer) != 'unknown') and (is_state_attr( my_sensor, 'clock', 'End of 1st') or is_state_attr( my_sensor, 'clock', 'End of 2nd')) }}
+      {{ (states(my_timer) != 'unknown') and (
+        is_state_attr( my_sensor, 'clock', 'End of 1st') or 
+        is_state_attr( my_sensor, 'clock', 'End of 2nd') or 
+        is_state_attr( my_sensor, 'clock', '00:00 - 1st') or 
+        is_state_attr( my_sensor, 'clock', '00:00 - 2nd')
+        )
+      }}
     id: 1st or 2nd Intermission Start
   - trigger: template
     value_template: >-
