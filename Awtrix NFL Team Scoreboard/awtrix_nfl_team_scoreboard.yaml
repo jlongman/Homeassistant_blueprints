@@ -255,13 +255,13 @@ variables:
       {{ raw_score|string }}
     {% endif %}
   left_team_score_x: >-
-    {% if left_team_score|length == 1 %}
+    {% if left_team_score|int < 10 and left_team_score|int >= 0 %}
       2
     {% else %}
       7
     {% endif %}
   right_team_score_x: >-
-    {% if right_team_score|length == 1 %}
+    {% if right_team_score|int < 10 and right_team_score|int >= 0 %}
       26
     {% else %}
       18
