@@ -256,16 +256,11 @@ variables:
     {% endif %}
   left_team_score_x: >-
     {% if left_team_score|int < 10 and left_team_score|int >= 0 %}
-      2
+      11
     {% else %}
       7
     {% endif %}
-  right_team_score_x: >-
-    {% if right_team_score|int < 10 and right_team_score|int >= 0 %}
-      26
-    {% else %}
-      18
-    {% endif %}
+  right_team_score_x: 18
   team_colors_0: >-
     {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
     {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
