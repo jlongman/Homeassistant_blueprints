@@ -10,6 +10,8 @@ blueprint:
     ## Prerequisites
     
     **Before** using this blueprint, ensure that you have **HACS** installed. You also need the ha-teamtracker integration [here](https://github.com/vasqued2/ha-teamtracker).
+
+    Very light grey or white primary team colours are automatically darkened so white scores remain readable. Secondary colours are unchanged.
     
     ## Credits
 
@@ -167,8 +169,8 @@ variables:
   score_leading_zero: !input score_leading_zero
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
   intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
-  is_swapped: "{% if display_mode == 'home_team_right' %}{{ state_attr(my_sensor, 'team_homeaway') == 'home' }}{% else %}false{% endif %}"
-  left_team_colors_0: >-
+  is_swapped: "{{ display_mode == 'home_team_right' and state_attr(my_sensor, 'team_homeaway') == 'home' }}"
+  left_team_colors_raw_0: >-
     {% if is_swapped %}
       {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
@@ -200,7 +202,7 @@ variables:
       {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
       {% endif %}
     {% endif %}
-  right_team_colors_0: >-
+  right_team_colors_raw_0: >-
     {% if is_swapped %}
       {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
       {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
@@ -232,6 +234,26 @@ variables:
       {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
       {% endif %}
     {% endif %}
+  scoreboard_background_colors: >-
+    {% macro readable_background(color) -%}
+      {%- if color is string and color is match('^#[0-9a-fA-F]{6}\\Z') -%}
+        {%- set red = color[1:3] | int(0, 16) -%}
+        {%- set green = color[3:5] | int(0, 16) -%}
+        {%- set blue = color[5:7] | int(0, 16) -%}
+        {%- set lightest = [red, green, blue] | max -%}
+        {%- set darkest = [red, green, blue] | min -%}
+        {%- if darkest >= 208 and lightest - darkest <= 24 -%}
+          {{- '#%02x%02x%02x' | format((red * 112 / lightest) | int, (green * 112 / lightest) | int, (blue * 112 / lightest) | int) -}}
+        {%- else -%}
+          {{- color -}}
+        {%- endif -%}
+      {%- else -%}
+        {{- color -}}
+      {%- endif -%}
+    {%- endmacro %}
+    {{- [readable_background(left_team_colors_raw_0), readable_background(right_team_colors_raw_0)] -}}
+  left_team_colors_0: "{{ scoreboard_background_colors[0] }}"
+  right_team_colors_0: "{{ scoreboard_background_colors[1] }}"
   left_team_score: >-
     {% if is_swapped %}
       {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
