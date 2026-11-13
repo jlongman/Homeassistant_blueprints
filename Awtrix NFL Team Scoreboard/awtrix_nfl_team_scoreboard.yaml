@@ -170,20 +170,34 @@ variables:
   intermission_1st_time: "{{ my_timer_1st_2nd_intermission }}"
   intermission_3rd_time: "{% if my_timer_overtime_intermission > 0 %}{{ my_timer_overtime_intermission }}{% else %}{{ my_timer_1st_2nd_intermission }}{% endif %}"
   is_swapped: "{{ display_mode == 'home_team_right' and state_attr(my_sensor, 'team_homeaway') == 'home' }}"
+  team_colors_safe: >-
+    {%- set colors = state_attr(my_sensor, 'team_colors') -%}
+    {%- if colors is sequence and colors is not string and colors is not mapping -%}
+      {{- [colors[0] if colors|length > 0 and colors[0] is string else '#000000', colors[1] if colors|length > 1 and colors[1] is string else '#FFFFFF'] -}}
+    {%- else -%}
+      {{- ['#000000', '#FFFFFF'] -}}
+    {%- endif -%}
+  opponent_colors_safe: >-
+    {%- set colors = state_attr(my_sensor, 'opponent_colors') -%}
+    {%- if colors is sequence and colors is not string and colors is not mapping -%}
+      {{- [colors[0] if colors|length > 0 and colors[0] is string else '#000000', colors[1] if colors|length > 1 and colors[1] is string else '#FFFFFF'] -}}
+    {%- else -%}
+      {{- ['#000000', '#FFFFFF'] -}}
+    {%- endif -%}
   left_team_colors_raw_0: >-
     {% if is_swapped %}
       {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
-      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+      {% else %}{{ opponent_colors_safe[0] }}
       {% endif %}
     {% else %}
       {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#D80621
       {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
       {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
       {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
-      {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+      {% else %}{{ team_colors_safe[0] }}
       {% endif %}
     {% endif %}
   left_team_colors_1: >-
@@ -192,14 +206,14 @@ variables:
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
-      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+      {% else %}{{ opponent_colors_safe[1] }}
       {% endif %}
     {% else %}
       {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
       {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
       {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
       {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
-      {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+      {% else %}{{ team_colors_safe[1] }}
       {% endif %}
     {% endif %}
   right_team_colors_raw_0: >-
@@ -208,14 +222,14 @@ variables:
       {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
       {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
       {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
-      {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+      {% else %}{{ team_colors_safe[0] }}
       {% endif %}
     {% else %}
       {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
-      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+      {% else %}{{ opponent_colors_safe[0] }}
       {% endif %}
     {% endif %}
   right_team_colors_1: >-
@@ -224,14 +238,14 @@ variables:
       {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
       {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
       {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
-      {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+      {% else %}{{ team_colors_safe[1] }}
       {% endif %}
     {% else %}
       {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
       {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
-      {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+      {% else %}{{ opponent_colors_safe[1] }}
       {% endif %}
     {% endif %}
   scoreboard_background_colors: >-
@@ -255,29 +269,21 @@ variables:
   left_team_colors_0: "{{ scoreboard_background_colors[0] }}"
   right_team_colors_0: "{{ scoreboard_background_colors[1] }}"
   left_team_score: >-
-    {% if is_swapped %}
-      {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
-    {% else %}
-      {% set raw_score = state_attr(my_sensor, 'team_score') %}
-    {% endif %}
-    {% if score_leading_zero and raw_score|int < 10 %}
-      {{ "0" + raw_score|string }}
-    {% else %}
-      {{ raw_score|string }}
-    {% endif %}
+    {%- if is_swapped -%}
+      {%- set raw_score = state_attr(my_sensor, 'opponent_score') -%}
+    {%- else -%}
+      {%- set raw_score = state_attr(my_sensor, 'team_score') -%}
+    {%- endif -%}
+    {{- raw_score | int(0) -}}
   right_team_score: >-
-    {% if is_swapped %}
-      {% set raw_score = state_attr(my_sensor, 'team_score') %}
-    {% else %}
-      {% set raw_score = state_attr(my_sensor, 'opponent_score') %}
-    {% endif %}
-    {% if score_leading_zero and raw_score|int < 10 %}
-      {{ "0" + raw_score|string }}
-    {% else %}
-      {{ raw_score|string }}
-    {% endif %}
+    {%- if is_swapped -%}
+      {%- set raw_score = state_attr(my_sensor, 'team_score') -%}
+    {%- else -%}
+      {%- set raw_score = state_attr(my_sensor, 'opponent_score') -%}
+    {%- endif -%}
+    {{- raw_score | int(0) -}}
   left_team_score_x: >-
-    {% if left_team_score|int < 10 and left_team_score|int >= 0 %}
+    {% if left_team_score|int(0) < 10 and left_team_score|int(0) >= 0 %}
       11
     {% else %}
       7
@@ -288,45 +294,37 @@ variables:
     {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#006AA7
     {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#0A3161
     {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#002F6C
-    {% else %}{{ state_attr(my_sensor, 'team_colors')[0] }}
+    {% else %}{{ team_colors_safe[0] }}
     {% endif %}
   team_colors_1: >-
     {% if state_attr(my_sensor, 'team_abbr') == 'CAN' %}#FFFFFF
     {% elif state_attr(my_sensor, 'team_abbr') == 'SWE' %}#FECC02
     {% elif state_attr(my_sensor, 'team_abbr') == 'USA' %}#B31942
     {% elif state_attr(my_sensor, 'team_abbr') == 'FIN' %}#FFFFFF
-    {% else %}{{ state_attr(my_sensor, 'team_colors')[1] }}
+    {% else %}{{ team_colors_safe[1] }}
     {% endif %}
   opponent_colors_0: >-
     {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#D80621
     {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#006AA7
     {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#0A3161
     {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#002F6C
-    {% else %}{{ state_attr(my_sensor, 'opponent_colors')[0] }}
+    {% else %}{{ opponent_colors_safe[0] }}
     {% endif %}
   opponent_colors_1: >-
     {% if state_attr(my_sensor, 'opponent_abbr') == 'CAN' %}#FFFFFF
     {% elif state_attr(my_sensor, 'opponent_abbr') == 'SWE' %}#FECC02
     {% elif state_attr(my_sensor, 'opponent_abbr') == 'USA' %}#B31942
     {% elif state_attr(my_sensor, 'opponent_abbr') == 'FIN' %}#FFFFFF
-    {% else %}{{ state_attr(my_sensor, 'opponent_colors')[1] }}
+    {% else %}{{ opponent_colors_safe[1] }}
     {% endif %}
-  pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') }}"
-  game_clock: "{{ state_attr(my_sensor, 'clock') }}"
+  pregame_notice: "{{ state_attr(my_sensor, 'kickoff_in') | default('', true) }}"
+  game_clock: "{{ state_attr(my_sensor, 'clock') | default('', true) }}"
   team_score: >-
-    {% set raw_team_score = state_attr(my_sensor, 'team_score') %}
-    {% if score_leading_zero and raw_team_score|int < 10 %}
-      {{  "0" + raw_team_score|string }}
-    {% else %}
-        {{ raw_team_score|string }}
-    {% endif %}
+    {%- set raw_team_score = state_attr(my_sensor, 'team_score') -%}
+    {{- raw_team_score | int(0) -}}
   opponent_score: >-
-    {% set raw_opponent_score = state_attr(my_sensor, 'opponent_score') %}
-    {% if score_leading_zero and raw_opponent_score|int < 10 %}
-        {{ "0" + raw_opponent_score|string }}
-    {% else %}
-        {{ raw_opponent_score|string }}
-    {% endif %}
+    {%- set raw_opponent_score = state_attr(my_sensor, 'opponent_score') -%}
+    {{- raw_opponent_score | int(0) -}}
   first_quarter: >-
     {"dp":[12,7,"#ffffff"]},
     {"dp":[14,7,"#5F5F5F"]},
@@ -376,8 +374,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ first_quarter }}
-        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{% if score_leading_zero and 0 <= left_team_score < 10 %}0{% endif %}{{ left_team_score }}",[255,255,255]]},
+        {"dt":[{{ right_team_score_x }}, 1, "{% if score_leading_zero and 0 <= right_team_score < 10 %}0{% endif %}{{ right_team_score }}",[255,255,255]]},
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -392,8 +390,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ second_quarter }}
-        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{% if score_leading_zero and 0 <= left_team_score < 10 %}0{% endif %}{{ left_team_score }}",[255,255,255]]},
+        {"dt":[{{ right_team_score_x }}, 1, "{% if score_leading_zero and 0 <= right_team_score < 10 %}0{% endif %}{{ right_team_score }}",[255,255,255]]},
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -408,8 +406,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ third_quarter }}
-        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{% if score_leading_zero and 0 <= left_team_score < 10 %}0{% endif %}{{ left_team_score }}",[255,255,255]]},
+        {"dt":[{{ right_team_score_x }}, 1, "{% if score_leading_zero and 0 <= right_team_score < 10 %}0{% endif %}{{ right_team_score }}",[255,255,255]]},
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
@@ -424,8 +422,8 @@ variables:
         {"dl":[28,0,28,7,"{{ right_team_colors_1 }}"]}, 
         {"dl":[30,0,30,7,"{{ right_team_colors_1 }}"]}, 
         {{ fourth_quarter }}
-        {"dt":[{{ left_team_score_x }}, 1, "{{ left_team_score }}",[255,255,255]]}, 
-        {"dt":[{{ right_team_score_x }}, 1, "{{ right_team_score }}",[255,255,255]]}, 
+        {"dt":[{{ left_team_score_x }}, 1, "{% if score_leading_zero and 0 <= left_team_score < 10 %}0{% endif %}{{ left_team_score }}",[255,255,255]]},
+        {"dt":[{{ right_team_score_x }}, 1, "{% if score_leading_zero and 0 <= right_team_score < 10 %}0{% endif %}{{ right_team_score }}",[255,255,255]]},
         {"dl":[15,3,16,3,"#ffffff"]} 
       ], 
       "duration": {{ message_duration }} 
